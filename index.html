@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pomodoro Configurable</title>
+  <style>
+    :root {
+      --bg-work: #2d3436;
+      --text-work: #ffffff;
+      --bg-short: #00b894;
+      --text-short: #ffffff;
+      --bg-long: #6c5ce7;
+      --text-long: #ffffff;
+      --surface: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.15);
+      --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --alarm-color: #ff7675;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--bg-work);
+      color: var(--text-work);
+      transition: background 0.6s ease, color 0.6s ease;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    body.short { background: var(--bg-short); color: var(--text-short); }
+    body.long  { background: var(--bg-long);  color: var(--text-long); }
+    body.alarm { animation: flashBg 0.8s infinite alternate; }
+
+    @keyframes flashBg {
+      0% { background: var(--bg-work); }
+      100% { background: var(--alarm-color); }
+    }
+
+    .container {
+      background: var(--surface);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      position: relative;
+      z-index: 2;
+    }
+
+    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; letter-spacing: 1px; }
+
+    #status {
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      opacity: 0.9;
+      font-weight: 500;
+    }
+
+    #timer {
+      font-size: 5rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      margin: 1rem 0 1.5rem;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    button {
+      padding: 0.8rem 1rem;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+    }
+
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button:hover:not(:disabled) { transform: translateY(-2px); }
+
+    #startBtn { background: #00b894; color: white; }
+    #pauseBtn { background: #fdcb6e; color: #2d3436; }
+    #resetBtn { background: #636e72; color: white; }
+    #skipBtn  { background: #74b9ff; color: #2d3436; }
+
+    .progress {
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.8;
+    }
+
+    details.config {
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: left;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      outline: none;
+    }
+
+    .config-panel {
+      display: grid;
+      gap: 0.8rem;
+      margin-top: 0.5rem;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    input[type="number"] {
+      width: 60px;
+      padding: 0.3rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1);
+      color: inherit;
+      text-align: center;
+    }
+
+    #saveConfig {
+      grid-column: span 2;
+      background: #0984e3;
+      color: white;
+      margin-top: 0.5rem;
+    }
+
+    .notif-section {
+      background: rgba(0,0,0,0.25);
+      border-radius: 8px;
+      padding: 0.8rem;
+      margin-top: 0.5rem;
+    }
+
+    .notif-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .notif-row.three-cols {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    #enableNotifBtn {
+      background: #d63031;
+      color: white;
+    }
+
+    #checkNotifBtn {
+      background: #6c5ce7;
+      color: white;
+    }
+
+    #testNotifBtn {
+      background: #00b894;
+      color: white;
+    }
+
+    #notifStatus {
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: block;
+      text-align: center;
+      padding: 0.5rem;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.3);
+      min-height: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #notifStatus.granted {
+      background: rgba(0, 184, 148, 0.3);
+      color: #00b894;
+    }
+
+    #notifStatus.denied {
+      background: rgba(214, 48, 49, 0.3);
+      color: #ff7675;
+    }
+
+    #notifStatus.pending {
+      background: rgba(253, 203, 110, 0.3);
+      color: #fdcb6e;
+    }
+
+    #notifStatus.local {
+      background: rgba(116, 185, 255, 0.3);
+      color: #74b9ff;
+    }
+
+    /* Overlay de Alarma */
+    #alarmOverlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    #alarmOverlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #alarmOverlay h2 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      animation: pulseText 0.8s infinite alternate;
+    }
+
+    @keyframes pulseText {
+      from { transform: scale(1); opacity: 0.8; }
+      to { transform: scale(1.05); opacity: 1; }
+    }
+
+    #dismissAlarm {
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      background: #fff;
+      color: #2d3436;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .protocol-warning {
+      background: rgba(255, 118, 117, 0.2);
+      border: 1px solid rgba(255, 118, 117, 0.4);
+      border-radius: 8px;
+      padding: 0.8rem;
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
+      text-align: left;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 480px) {
+      .container { padding: 1.5rem; }
+      #timer { font-size: 4rem; }
+      .controls { gap: 0.5rem; }
+      button { padding: 0.7rem 0.5rem; font-size: 0.9rem; }
+      #alarmOverlay h2 { font-size: 2.5rem; }
+      .notif-row, .notif-row.three-cols { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🍅 Pomodoro de Trabajo</h1>
+    <div id="status">Preparado para empezar</div>
+    <div id="timer">25:00</div>
+
+    <div class="controls">
+      <button id="startBtn">▶ Iniciar</button>
+      <button id="pauseBtn" disabled> Pausar</button>
+      <button id="resetBtn">↺ Reiniciar</button>
+      <button id="skipBtn">⏭ Saltar fase</button>
+    </div>
+
+    <div class="progress">
+      Ciclo: <span id="cycleCount">0</span> / <span id="totalCycles">4</span>
+    </div>
+
+    <details class="config">
+      <summary>⚙️ Configuración</summary>
+      <div class="config-panel">
+        <label>Tiempo de trabajo (min) <input type="number" id="workTime" value="25" min="1"></label>
+        <label>Descanso corto (min) <input type="number" id="shortBreak" value="5" min="1"></label>
+        <label>Descanso largo (min) <input type="number" id="longBreak" value="15" min="1"></label>
+        <label>Ciclos antes de largo <input type="number" id="cyclesBeforeLong" value="4" min="1"></label>
+        <button id="saveConfig">💾 Guardar configuración</button>
+        
+        <div class="notif-section">
+          <div class="notif-row three-cols">
+            <button id="enableNotifBtn">🔔 Pedir Permiso</button>
+            <button id="checkNotifBtn">🔍 Verificar</button>
+            <button id="testNotifBtn"> Probar</button>
+          </div>
+          <span id="notifStatus" class="pending">⏳ Verificando...</span>
+          
+          <div id="protocolWarning" class="protocol-warning" style="display: none;">
+            ⚠️ <strong>Archivo local detectado.</strong><br>
+            Edge/Chrome bloquean notificaciones en <code>file://</code>.<br>
+            Para activarlas:<br>
+            1️⃣ Sube el archivo a <a href="https://pages.github.com" target="_blank">GitHub Pages</a> o <a href="https://netlify.com" target="_blank">Netlify</a> (gratis)<br>
+            2️⃣ O usa <a href="https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer" target="_blank">Live Server</a> en VS Code
+          </div>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- Overlay de Alarma -->
+  <div id="alarmOverlay">
+    <h2> ¡TIEMPO CUMPLIDO!</h2>
+    <button id="dismissAlarm"> DETENER ALARMA</button>
+  </div>
+
+  <script>
+    // Estado
+    let timeLeft = 0;
+    let timerTimeout = null;
+    let isRunning = false;
+    let currentPhase = 'work';
+    let cycleCount = 0;
+    let alarmTimeout = null;
+    let audioCtx = null;
+
+    // DOM
+    const timerDisplay = document.getElementById('timer');
+    const statusDisplay = document.getElementById('status');
+    const cycleCountDisplay = document.getElementById('cycleCount');
+    const totalCyclesDisplay = document.getElementById('totalCycles');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const skipBtn = document.getElementById('skipBtn');
+    const saveConfigBtn = document.getElementById('saveConfig');
+    const enableNotifBtn = document.getElementById('enableNotifBtn');
+    const checkNotifBtn = document.getElementById('checkNotifBtn');
+    const testNotifBtn = document.getElementById('testNotifBtn');
+    const notifStatus = document.getElementById('notifStatus');
+    const protocolWarning = document.getElementById('protocolWarning');
+    const alarmOverlay = document.getElementById('alarmOverlay');
+    const dismissAlarmBtn = document.getElementById('dismissAlarm');
+
+    const workInput = document.getElementById('workTime');
+    const shortInput = document.getElementById('shortBreak');
+    const longInput = document.getElementById('longBreak');
+    const cyclesInput = document.getElementById('cyclesBeforeLong');
+
+    // Configuración
+    function loadConfig() {
+      const saved = localStorage.getItem('pomodoroConfig');
+      return saved ? JSON.parse(saved) : { work: 25, short: 5, long: 15, cycles: 4 };
+    }
+
+    let config = loadConfig();
+
+    function applyConfigToInputs() {
+      workInput.value = config.work;
+      shortInput.value = config.short;
+      longInput.value = config.long;
+      cyclesInput.value = config.cycles;
+      totalCyclesDisplay.textContent = config.cycles;
+    }
+
+    function setTimeFromPhase() {
+      const mins = currentPhase === 'work' ? config.work :
+                   currentPhase === 'short' ? config.short : config.long;
+      timeLeft = mins * 60;
+      updateDisplay();
+    }
+
+    function updateDisplay() {
+      const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+      const s = (timeLeft % 60).toString().padStart(2, '0');
+      timerDisplay.textContent = `${m}:${s}`;
+      document.title = `${m}:${s} | ${currentPhase === 'work' ? 'Trabajo' : 'Descanso'}`;
+    }
+
+    function updatePhaseUI() {
+      const statuses = {
+        work: '🔥 Trabajando',
+        short: '☕ Descanso corto',
+        long: '🌴 Descanso largo'
+      };
+      statusDisplay.textContent = statuses[currentPhase];
+      document.body.className = currentPhase === 'work' ? '' : currentPhase;
+    }
+
+    // 🔊 ALARMA RECURRENTE
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playBeep() {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.value = 880;
+      osc.type = 'square';
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function startRecurringAlarm() {
+      stopAlarm();
+      document.body.classList.add('alarm');
+      alarmOverlay.classList.add('visible');
+      playBeep();
+      alarmTimeout = setInterval(() => playBeep(), 400);
+    }
+
+    function stopAlarm() {
+      document.body.classList.remove('alarm');
+      alarmOverlay.classList.remove('visible');
+      if (alarmTimeout) {
+        clearInterval(alarmTimeout);
+        alarmTimeout = null;
+      }
+    }
+
+    // 🔔 NOTIFICACIONES - VERSIÓN FINAL
+    function isLocalFile() {
+      return window.location.protocol === 'file:';
+    }
+
+    function updateNotifStatus() {
+      if (!("Notification" in window)) {
+        notifStatus.textContent = " Navegador NO soporta notificaciones";
+        notifStatus.className = 'denied';
+        enableNotifBtn.disabled = true;
+        checkNotifBtn.disabled = true;
+        testNotifBtn.disabled = true;
+        return;
+      }
+
+      // Mostrar advertencia si es archivo local
+      if (isLocalFile()) {
+        protocolWarning.style.display = 'block';
+        notifStatus.textContent = "📁 Modo local - Notificaciones bloqueadas por el navegador";
+        notifStatus.className = 'local';
+        enableNotifBtn.disabled = true;
+        enableNotifBtn.textContent = " Bloqueado en file://";
+        checkNotifBtn.disabled = false;
+        testNotifBtn.disabled = true;
+        return;
+      } else {
+        protocolWarning.style.display = 'none';
+      }
+      
+      const permission = Notification.permission;
+      console.log('Estado de notificaciones:', permission);
+      
+      if (permission === "granted") {
+        notifStatus.textContent = "✅ NOTIFICACIONES ACTIVADAS";
+        notifStatus.className = 'granted';
+        enableNotifBtn.disabled = true;
+        enableNotifBtn.textContent = "✓ Activadas";
+        checkNotifBtn.disabled = false;
+        testNotifBtn.disabled = false;
+      } else if (permission === "denied") {
+        notifStatus.textContent = " Permiso DENEGADO";
+        notifStatus.className = 'denied';
+        enableNotifBtn.disabled = true;
+        enableNotifBtn.textContent = "🔔 Bloqueado";
+        checkNotifBtn.disabled = false;
+        testNotifBtn.disabled = true;
+      } else {
+        notifStatus.textContent = "⏳ Pendiente de permiso";
+        notifStatus.className = 'pending';
+        enableNotifBtn.disabled = false;
+        enableNotifBtn.textContent = "🔔 Pedir Permiso";
+        checkNotifBtn.disabled = false;
+        testNotifBtn.disabled = false;
+      }
+    }
+
+    async function requestNotificationPermission() {
+      if (!("Notification" in window)) {
+        alert("❌ Tu navegador no soporta notificaciones");
+        return;
+      }
+
+      if (isLocalFile()) {
+        alert("️ No se pueden solicitar permisos en archivo local.\n\nSube el archivo a un servidor web o usa Live Server.");
+        return;
+      }
+      
+      try {
+        console.log('Solicitando permiso de notificación...');
+        const permission = await Notification.requestPermission();
+        console.log('Permiso obtenido:', permission);
+        
+        // Forzar actualización inmediata del UI
+        updateNotifStatus();
+        
+        if (permission === "granted") {
+          new Notification("🍅 ¡Notificaciones activadas!", { 
+            body: "Te avisaré cuando termine cada fase del Pomodoro.",
+            icon: "🍅"
+          });
+          setTimeout(() => {
+            alert("✅ ¡Perfecto! Las notificaciones están activas.\nAhora verás el cartel verde.");
+          }, 300);
+        } else if (permission === "denied") {
+          alert("❌ Permiso denegado.\n\nPara activarlo manualmente:\n1. Haz clic en el candado 🔒 junto a la URL\n2. Busca 'Notificaciones'\n3. Cámbialo a 'Permitir'\n4. Recarga la página");
+        }
+      } catch (error) {
+        console.error('Error al solicitar notificaciones:', error);
+        alert("Error: " + error.message);
+      }
+    }
+
+    function sendSystemNotification(phase) {
+      if (!("Notification" in window)) {
+        console.warn('Notificaciones no disponibles');
+        return;
+      }
+      
+      if (Notification.permission !== "granted") {
+        console.warn('Permiso de notificación no concedido. Usando alarma visual/sonora.');
+        return;
+      }
+      
+      const messages = {
+        work: { title: "🔥 ¡Bloque completado!", body: "Es momento de tu descanso." },
+        short: { title: "☕ Descanso terminado", body: "¡De vuelta al trabajo!" },
+        long: { title: "🌴 Descanso largo terminado", body: "¡Nueva sesión lista!" }
+      };
+      
+      const msg = messages[phase] || { title: "⏱️ Pomodoro", body: "Tiempo completado." };
+      
+      try {
+        new Notification(msg.title, {
+          body: msg.body,
+          tag: "pomodoro-" + phase,
+          icon: "🍅",
+          requireInteraction: true
+        });
+        console.log('Notificación enviada:', msg.title);
+      } catch (error) {
+        console.error('Error al enviar notificación:', error);
+      }
+    }
+
+    function testNotification() {
+      if (!("Notification" in window)) {
+        alert("❌ Tu navegador no soporta notificaciones");
+        return;
+      }
+
+      if (isLocalFile()) {
+        alert("⚠️ Las notificaciones no funcionan en archivos locales.\n\nPrueba subiendo el archivo a un servidor web.");
+        return;
+      }
+
+      if (Notification.permission === "granted") {
+        new Notification("🧪 Prueba de notificación", {
+          body: "¡Esta es una notificación de prueba del Pomodoro!",
+          icon: "🍅",
+          requireInteraction: true
+        });
+        alert(" Notificación de prueba enviada.\nRevisa tu barra de notificaciones.");
+      } else if (Notification.permission === "denied") {
+        alert("🚫 Las notificaciones están bloqueadas.\n\nHaz clic en el candado 🔒 en la barra de direcciones y permite las notificaciones.");
+      } else {
+        alert("⏳ Primero debes conceder permiso.\nHaz clic en 'Pedir Permiso'.");
+      }
+    }
+
+    // ️ TEMPORIZADOR
+    let timerStart = null;
+    let originalTimeLeft = 0;
+
+    function tick() {
+      if (!isRunning) return;
+      const now = Date.now();
+      const elapsed = Math.floor((now - timerStart) / 1000);
+      timeLeft = Math.max(0, originalTimeLeft - elapsed);
+      updateDisplay();
+
+      if (timeLeft <= 0) {
+        clearInterval(timerTimeout);
+        isRunning = false;
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        sendSystemNotification(currentPhase);
+        startRecurringAlarm();
+        return;
+      }
+
+      timerTimeout = setTimeout(tick, 250);
+    }
+
+    function startTimer() {
+      if (isRunning || timeLeft <= 0) return;
+      initAudio();
+      isRunning = true;
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      timerStart = Date.now();
+      originalTimeLeft = timeLeft;
+      tick();
+    }
+
+    function pauseTimer() {
+      if (!isRunning) return;
+      isRunning = false;
+      clearTimeout(timerTimeout);
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+    }
+
+    function resetTimer() {
+      pauseTimer();
+      stopAlarm();
+      cycleCount = 0;
+      currentPhase = 'work';
+      cycleCountDisplay.textContent = 0;
+      setTimeFromPhase();
+      updatePhaseUI();
+    }
+
+    function nextPhase() {
+      stopAlarm();
+      if (currentPhase === 'work') {
+        cycleCount++;
+        cycleCountDisplay.textContent = cycleCount;
+        if (cycleCount >= config.cycles) {
+          currentPhase = 'long';
+          cycleCount = 0;
+          cycleCountDisplay.textContent = 0;
+        } else {
+          currentPhase = 'short';
+        }
+      } else {
+        currentPhase = 'work';
+      }
+      setTimeFromPhase();
+      updatePhaseUI();
+    }
+
+    function saveConfig() {
+      config = {
+        work: parseInt(workInput.value) || 25,
+        short: parseInt(shortInput.value) || 5,
+        long: parseInt(longInput.value) || 15,
+        cycles: parseInt(cyclesInput.value) || 4
+      };
+      localStorage.setItem('pomodoroConfig', JSON.stringify(config));
+      totalCyclesDisplay.textContent = config.cycles;
+      if (!isRunning) {
+        setTimeFromPhase();
+        updatePhaseUI();
+      }
+      saveConfigBtn.textContent = '✅ Guardado';
+      setTimeout(() => saveConfigBtn.textContent = '💾 Guardar configuración', 1500);
+    }
+
+    // Eventos
+    startBtn.addEventListener('click', startTimer);
+    pauseBtn.addEventListener('click', pauseTimer);
+    resetBtn.addEventListener('click', resetTimer);
+    skipBtn.addEventListener('click', () => { pauseTimer(); nextPhase(); });
+    saveConfigBtn.addEventListener('click', saveConfig);
+    enableNotifBtn.addEventListener('click', requestNotificationPermission);
+    checkNotifBtn.addEventListener('click', () => {
+      updateNotifStatus();
+      const perm = Notification.permission;
+      alert(`Estado: ${perm}\n\ngranted = Funcionan\ndenied = Bloqueadas\ndefault = Sin decidir`);
+    });
+    testNotifBtn.addEventListener('click', testNotification);
+    dismissAlarmBtn.addEventListener('click', () => {
+      stopAlarm();
+      nextPhase();
+    });
+
+    // Inicialización
+    applyConfigToInputs();
+    setTimeFromPhase();
+    updatePhaseUI();
+    
+    // Verificar notificaciones al cargar
+    setTimeout(() => {
+      updateNotifStatus();
+    }, 300);
+  </script>
+</body>
+</html>
