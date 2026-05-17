@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Pomodoro Configurable</title>
   <style>
     :root {
@@ -22,15 +22,15 @@
 
     body {
       font-family: var(--font);
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
       background: var(--bg-work);
       color: var(--text-work);
       transition: background 0.6s ease, color 0.6s ease;
-      padding: 20px;
-      overflow: hidden;
+      padding: 15px;
+      overflow-x: hidden;
     }
 
     body.short { background: var(--bg-short); color: var(--text-short); }
@@ -47,7 +47,7 @@
       backdrop-filter: blur(10px);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 2.5rem;
+      padding: 2rem;
       width: 100%;
       max-width: 420px;
       text-align: center;
@@ -82,17 +82,19 @@
     }
 
     button {
-      padding: 0.8rem 1rem;
+      padding: 0.9rem 1rem;
       border: none;
       border-radius: 10px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
       font-size: 0.95rem;
+      touch-action: manipulation;
     }
 
     button:disabled { opacity: 0.5; cursor: not-allowed; }
     button:hover:not(:disabled) { transform: translateY(-2px); }
+    button:active:not(:disabled) { transform: translateY(0); }
 
     #startBtn { background: #00b894; color: white; }
     #pauseBtn { background: #fdcb6e; color: #2d3436; }
@@ -115,38 +117,57 @@
     summary {
       cursor: pointer;
       font-weight: 600;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.8rem;
       outline: none;
+      padding: 0.3rem 0;
     }
 
     .config-panel {
-      display: grid;
+      display: flex;
+      flex-direction: column;
       gap: 0.8rem;
       margin-top: 0.5rem;
     }
 
-    label {
+    .config-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.9rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .config-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      flex: 1;
+      min-width: calc(50% - 0.5rem);
+    }
+
+    label {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      line-height: 1.2;
     }
 
     input[type="number"] {
-      width: 60px;
-      padding: 0.3rem;
+      width: 100%;
+      padding: 0.5rem;
       border-radius: 6px;
       border: 1px solid rgba(255,255,255,0.3);
       background: rgba(255,255,255,0.1);
       color: inherit;
       text-align: center;
+      font-size: 1rem;
     }
 
     #saveConfig {
-      grid-column: span 2;
+      width: 100%;
       background: #0984e3;
       color: white;
       margin-top: 0.5rem;
+      padding: 0.9rem;
     }
 
     .notif-section {
@@ -158,28 +179,30 @@
 
     .notif-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 0.5rem;
       margin-bottom: 0.5rem;
-    }
-
-    .notif-row.three-cols {
-      grid-template-columns: 1fr 1fr 1fr;
     }
 
     #enableNotifBtn {
       background: #d63031;
       color: white;
+      font-size: 0.85rem;
+      padding: 0.7rem 0.3rem;
     }
 
     #checkNotifBtn {
       background: #6c5ce7;
       color: white;
+      font-size: 0.85rem;
+      padding: 0.7rem 0.3rem;
     }
 
     #testNotifBtn {
       background: #00b894;
       color: white;
+      font-size: 0.85rem;
+      padding: 0.7rem 0.3rem;
     }
 
     #notifStatus {
@@ -194,6 +217,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      word-wrap: break-word;
+      line-height: 1.3;
     }
 
     #notifStatus.granted {
@@ -229,6 +254,7 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.3s;
+      padding: 2rem;
     }
 
     #alarmOverlay.visible {
@@ -237,9 +263,10 @@
     }
 
     #alarmOverlay h2 {
-      font-size: 3rem;
-      margin-bottom: 1rem;
+      font-size: 2.5rem;
+      margin-bottom: 1.5rem;
       animation: pulseText 0.8s infinite alternate;
+      text-align: center;
     }
 
     @keyframes pulseText {
@@ -263,18 +290,115 @@
       border-radius: 8px;
       padding: 0.8rem;
       margin-top: 0.5rem;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       text-align: left;
       line-height: 1.4;
     }
 
+    .protocol-warning a {
+      color: #74b9ff;
+      text-decoration: none;
+    }
+
+    .protocol-warning a:hover {
+      text-decoration: underline;
+    }
+
+    /* MOBILE OPTIMIZATIONS */
     @media (max-width: 480px) {
-      .container { padding: 1.5rem; }
-      #timer { font-size: 4rem; }
-      .controls { gap: 0.5rem; }
-      button { padding: 0.7rem 0.5rem; font-size: 0.9rem; }
-      #alarmOverlay h2 { font-size: 2.5rem; }
-      .notif-row, .notif-row.three-cols { grid-template-columns: 1fr; }
+      body {
+        padding: 10px;
+      }
+
+      .container {
+        padding: 1.5rem 1rem;
+        max-width: 100%;
+      }
+
+      h1 {
+        font-size: 1.3rem;
+      }
+
+      #timer {
+        font-size: 4rem;
+        margin: 0.8rem 0 1.2rem;
+      }
+
+      .controls {
+        gap: 0.6rem;
+      }
+
+      button {
+        padding: 0.8rem 0.6rem;
+        font-size: 0.9rem;
+      }
+
+      .config-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .config-item {
+        min-width: 100%;
+      }
+
+      .notif-row {
+        grid-template-columns: 1fr;
+      }
+
+      #alarmOverlay h2 {
+        font-size: 2rem;
+      }
+
+      #dismissAlarm {
+        padding: 0.9rem 1.5rem;
+        font-size: 1.1rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+      #timer {
+        font-size: 3.5rem;
+      }
+
+      h1 {
+        font-size: 1.2rem;
+      }
+
+      .container {
+        padding: 1.2rem 0.8rem;
+      }
+
+      button {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
+      }
+    }
+
+    /* Landscape mobile */
+    @media (max-height: 600px) and (orientation: landscape) {
+      .container {
+        padding: 1rem;
+        max-height: 95vh;
+        overflow-y: auto;
+      }
+
+      #timer {
+        font-size: 3.5rem;
+        margin: 0.5rem 0 1rem;
+      }
+
+      details.config {
+        max-height: 200px;
+        overflow-y: auto;
+      }
+    }
+
+    /* Prevent text selection on buttons */
+    button {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
     }
   </style>
 </head>
@@ -286,7 +410,7 @@
 
     <div class="controls">
       <button id="startBtn">▶ Iniciar</button>
-      <button id="pauseBtn" disabled> Pausar</button>
+      <button id="pauseBtn" disabled>⏸ Pausar</button>
       <button id="resetBtn">↺ Reiniciar</button>
       <button id="skipBtn">⏭ Saltar fase</button>
     </div>
@@ -298,26 +422,42 @@
     <details class="config">
       <summary>⚙️ Configuración</summary>
       <div class="config-panel">
-        <label>Tiempo de trabajo (min) <input type="number" id="workTime" value="25" min="1"></label>
-        <label>Descanso corto (min) <input type="number" id="shortBreak" value="5" min="1"></label>
-        <label>Descanso largo (min) <input type="number" id="longBreak" value="15" min="1"></label>
-        <label>Ciclos antes de largo <input type="number" id="cyclesBeforeLong" value="4" min="1"></label>
+        <div class="config-row">
+          <div class="config-item">
+            <label>Tiempo de trabajo (min)</label>
+            <input type="number" id="workTime" value="25" min="1">
+          </div>
+          <div class="config-item">
+            <label>Descanso corto (min)</label>
+            <input type="number" id="shortBreak" value="5" min="1">
+          </div>
+        </div>
+        
+        <div class="config-row">
+          <div class="config-item">
+            <label>Descanso largo (min)</label>
+            <input type="number" id="longBreak" value="15" min="1">
+          </div>
+          <div class="config-item">
+            <label>Ciclos antes de largo</label>
+            <input type="number" id="cyclesBeforeLong" value="4" min="1">
+          </div>
+        </div>
+        
         <button id="saveConfig">💾 Guardar configuración</button>
         
         <div class="notif-section">
-          <div class="notif-row three-cols">
+          <div class="notif-row">
             <button id="enableNotifBtn">🔔 Pedir Permiso</button>
             <button id="checkNotifBtn">🔍 Verificar</button>
-            <button id="testNotifBtn"> Probar</button>
+            <button id="testNotifBtn">🧪 Probar</button>
           </div>
           <span id="notifStatus" class="pending">⏳ Verificando...</span>
           
           <div id="protocolWarning" class="protocol-warning" style="display: none;">
             ⚠️ <strong>Archivo local detectado.</strong><br>
             Edge/Chrome bloquean notificaciones en <code>file://</code>.<br>
-            Para activarlas:<br>
-            1️⃣ Sube el archivo a <a href="https://pages.github.com" target="_blank">GitHub Pages</a> o <a href="https://netlify.com" target="_blank">Netlify</a> (gratis)<br>
-            2️⃣ O usa <a href="https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer" target="_blank">Live Server</a> en VS Code
+            Para activarlas, usa un servidor web con HTTPS.
           </div>
         </div>
       </div>
@@ -326,8 +466,8 @@
 
   <!-- Overlay de Alarma -->
   <div id="alarmOverlay">
-    <h2> ¡TIEMPO CUMPLIDO!</h2>
-    <button id="dismissAlarm"> DETENER ALARMA</button>
+    <h2>🍅 ¡TIEMPO CUMPLIDO!</h2>
+    <button id="dismissAlarm">⏹ DETENER ALARMA</button>
   </div>
 
   <script>
@@ -440,14 +580,14 @@
       }
     }
 
-    // 🔔 NOTIFICACIONES - VERSIÓN FINAL
+    // 🔔 NOTIFICACIONES
     function isLocalFile() {
       return window.location.protocol === 'file:';
     }
 
     function updateNotifStatus() {
       if (!("Notification" in window)) {
-        notifStatus.textContent = " Navegador NO soporta notificaciones";
+        notifStatus.textContent = "❌ Navegador NO soporta notificaciones";
         notifStatus.className = 'denied';
         enableNotifBtn.disabled = true;
         checkNotifBtn.disabled = true;
@@ -455,13 +595,12 @@
         return;
       }
 
-      // Mostrar advertencia si es archivo local
       if (isLocalFile()) {
         protocolWarning.style.display = 'block';
-        notifStatus.textContent = "📁 Modo local - Notificaciones bloqueadas por el navegador";
+        notifStatus.textContent = "📁 Modo local - Notificaciones bloqueadas";
         notifStatus.className = 'local';
         enableNotifBtn.disabled = true;
-        enableNotifBtn.textContent = " Bloqueado en file://";
+        enableNotifBtn.textContent = "🚫 Bloqueado";
         checkNotifBtn.disabled = false;
         testNotifBtn.disabled = true;
         return;
@@ -480,7 +619,7 @@
         checkNotifBtn.disabled = false;
         testNotifBtn.disabled = false;
       } else if (permission === "denied") {
-        notifStatus.textContent = " Permiso DENEGADO";
+        notifStatus.textContent = "🚫 Permiso DENEGADO";
         notifStatus.className = 'denied';
         enableNotifBtn.disabled = true;
         enableNotifBtn.textContent = "🔔 Bloqueado";
@@ -503,7 +642,7 @@
       }
 
       if (isLocalFile()) {
-        alert("️ No se pueden solicitar permisos en archivo local.\n\nSube el archivo a un servidor web o usa Live Server.");
+        alert("⚠️ No se pueden solicitar permisos en archivo local.\n\nLas notificaciones requieren HTTPS.");
         return;
       }
       
@@ -512,7 +651,6 @@
         const permission = await Notification.requestPermission();
         console.log('Permiso obtenido:', permission);
         
-        // Forzar actualización inmediata del UI
         updateNotifStatus();
         
         if (permission === "granted") {
@@ -521,10 +659,10 @@
             icon: "🍅"
           });
           setTimeout(() => {
-            alert("✅ ¡Perfecto! Las notificaciones están activas.\nAhora verás el cartel verde.");
+            alert("✅ ¡Perfecto! Las notificaciones están activas.");
           }, 300);
         } else if (permission === "denied") {
-          alert("❌ Permiso denegado.\n\nPara activarlo manualmente:\n1. Haz clic en el candado 🔒 junto a la URL\n2. Busca 'Notificaciones'\n3. Cámbialo a 'Permitir'\n4. Recarga la página");
+          alert("❌ Permiso denegado.\n\nPara activarlo:\n1. Clic en 🔒 junto a la URL\n2. Cambia 'Notificaciones' a 'Permitir'\n3. Recarga la página");
         }
       } catch (error) {
         console.error('Error al solicitar notificaciones:', error);
@@ -539,7 +677,7 @@
       }
       
       if (Notification.permission !== "granted") {
-        console.warn('Permiso de notificación no concedido. Usando alarma visual/sonora.');
+        console.warn('Permiso de notificación no concedido');
         return;
       }
       
@@ -571,7 +709,7 @@
       }
 
       if (isLocalFile()) {
-        alert("⚠️ Las notificaciones no funcionan en archivos locales.\n\nPrueba subiendo el archivo a un servidor web.");
+        alert("⚠️ Las notificaciones no funcionan en archivos locales.");
         return;
       }
 
@@ -581,15 +719,15 @@
           icon: "🍅",
           requireInteraction: true
         });
-        alert(" Notificación de prueba enviada.\nRevisa tu barra de notificaciones.");
+        alert("✅ Notificación de prueba enviada.");
       } else if (Notification.permission === "denied") {
-        alert("🚫 Las notificaciones están bloqueadas.\n\nHaz clic en el candado 🔒 en la barra de direcciones y permite las notificaciones.");
+        alert("🚫 Las notificaciones están bloqueadas.");
       } else {
-        alert("⏳ Primero debes conceder permiso.\nHaz clic en 'Pedir Permiso'.");
+        alert("⏳ Primero debes conceder permiso.");
       }
     }
 
-    // ️ TEMPORIZADOR
+    // ⏱️ TEMPORIZADOR
     let timerStart = null;
     let originalTimeLeft = 0;
 
@@ -688,7 +826,7 @@
     checkNotifBtn.addEventListener('click', () => {
       updateNotifStatus();
       const perm = Notification.permission;
-      alert(`Estado: ${perm}\n\ngranted = Funcionan\ndenied = Bloqueadas\ndefault = Sin decidir`);
+      alert(`Estado: ${perm}`);
     });
     testNotifBtn.addEventListener('click', testNotification);
     dismissAlarmBtn.addEventListener('click', () => {
@@ -701,7 +839,6 @@
     setTimeFromPhase();
     updatePhaseUI();
     
-    // Verificar notificaciones al cargar
     setTimeout(() => {
       updateNotifStatus();
     }, 300);
