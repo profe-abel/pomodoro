@@ -1,28 +1,4 @@
-# Commit message
-
-```
-feat: rediseño completo → FocusFlow, pomodoro multi-proyecto con modos de energía
-
-- Pantalla de inicio con selector de nivel de energía (alta/media/baja)
-  que sugiere proyectos y modo de trabajo según el momento del día
-- Sidebar de proyectos con conteo de pomos por proyecto y colores únicos
-- Timer con barra de progreso, dots de ciclo y campo de tarea activa
-- Dashboard lateral: pomos de hoy, tiempo enfocado, proyecto top del día
-- Heatmap semanal de sesiones por día
-- Historial de las últimas 10 sesiones con proyecto, tarea y hora
-- Persistencia completa en localStorage (proyectos + sesiones)
-- Proyectos predeterminados: Consultora Construcción, CimientoDigital,
-  Katuetei Home, ProspectaRed
-- Notificaciones del navegador al completar cada fase
-- Diseño oscuro responsivo, sin dependencias externas
-```
-
----
-
-# README.md
-
-```markdown
-# FocusFlow 🍅
+FocusFlow 🍅
 
 Pomodoro para quienes manejan múltiples proyectos al mismo tiempo.
 Construido como herramienta personal y evolucionado en público.
