@@ -1,847 +1,769 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pomodoro Configurable</title>
-  <style>
-    :root {
-      --bg-work: #2d3436;
-      --text-work: #ffffff;
-      --bg-short: #00b894;
-      --text-short: #ffffff;
-      --bg-long: #6c5ce7;
-      --text-long: #ffffff;
-      --surface: rgba(255,255,255,0.08);
-      --border: rgba(255,255,255,0.15);
-      --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      --alarm-color: #ff7675;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FocusFlow — Pomodoro con modos de energía</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --bg2: #181818;
+    --bg3: #222;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --text: #f0f0f0;
+    --text2: #999;
+    --text3: #666;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --green: #1D9E75;
+    --green-dark: #0F6E56;
+    --blue: #378ADD;
+    --amber: #BA7517;
+    --purple: #7F77DD;
+    --coral: #D85A30;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* ── ENERGY SELECTOR ── */
+  .energy-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    gap: 2rem;
+  }
+  .energy-screen.hidden { display: none; }
+  .energy-logo { font-size: 13px; font-weight: 600; letter-spacing: .12em; color: var(--text3); text-transform: uppercase; }
+  .energy-title { font-size: 28px; font-weight: 500; text-align: center; line-height: 1.3; }
+  .energy-sub { font-size: 15px; color: var(--text2); text-align: center; max-width: 340px; line-height: 1.6; }
+  .energy-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; width: 100%; max-width: 560px; }
+  .energy-card {
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1rem;
+    cursor: pointer;
+    background: var(--bg2);
+    transition: border-color .2s, transform .15s;
+    text-align: center;
+  }
+  .energy-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .energy-card.selected { border-color: currentColor; }
+  .energy-icon { font-size: 28px; margin-bottom: .5rem; }
+  .energy-name { font-size: 14px; font-weight: 500; margin-bottom: .25rem; }
+  .energy-desc { font-size: 12px; color: var(--text2); line-height: 1.4; }
+  .energy-card.high { color: var(--green); }
+  .energy-card.mid { color: var(--blue); }
+  .energy-card.low { color: var(--amber); }
+  .energy-continue {
+    padding: 12px 32px; font-size: 15px; font-weight: 500;
+    background: var(--green); color: #fff; border: none;
+    border-radius: var(--radius-sm); cursor: pointer;
+    transition: background .15s; opacity: .4; pointer-events: none;
+  }
+  .energy-continue.active { opacity: 1; pointer-events: all; }
+  .energy-continue.active:hover { background: var(--green-dark); }
 
-    body {
-      font-family: var(--font);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: var(--bg-work);
-      color: var(--text-work);
-      transition: background 0.6s ease, color 0.6s ease;
-      padding: 15px;
-      overflow-x: hidden;
-    }
+  /* ── MAIN APP ── */
+  .app { display: none; flex-direction: column; min-height: 100vh; }
+  .app.visible { display: flex; }
 
-    body.short { background: var(--bg-short); color: var(--text-short); }
-    body.long  { background: var(--bg-long);  color: var(--text-long); }
-    body.alarm { animation: flashBg 0.8s infinite alternate; }
+  /* top bar */
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: .875rem 1.5rem;
+    border-bottom: 0.5px solid var(--border);
+    background: var(--bg);
+  }
+  .topbar-logo { font-size: 13px; font-weight: 600; letter-spacing: .1em; color: var(--text3); text-transform: uppercase; flex: 1; }
+  .mode-pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 500;
+    border: 0.5px solid var(--border2);
+  }
+  .mode-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .reset-day-btn {
+    font-size: 12px; color: var(--text3); background: none;
+    border: 0.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 4px 10px; cursor: pointer;
+  }
+  .reset-day-btn:hover { border-color: var(--border2); color: var(--text2); }
 
-    @keyframes flashBg {
-      0% { background: var(--bg-work); }
-      100% { background: var(--alarm-color); }
-    }
+  /* layout */
+  .layout { display: grid; grid-template-columns: 240px 1fr 220px; flex: 1; overflow: hidden; }
 
-    .container {
-      background: var(--surface);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 2rem;
-      width: 100%;
-      max-width: 420px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      position: relative;
-      z-index: 2;
-    }
+  /* sidebar izquierdo — proyectos */
+  .sidebar-left {
+    border-right: 0.5px solid var(--border);
+    padding: 1.25rem 1rem;
+    display: flex; flex-direction: column; gap: 1rem;
+    overflow-y: auto;
+    background: var(--bg);
+  }
+  .sidebar-title {
+    font-size: 11px; font-weight: 600; letter-spacing: .1em;
+    color: var(--text3); text-transform: uppercase; padding: 0 4px;
+  }
+  .suggestions-box {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: .75rem;
+  }
+  .suggestions-title { font-size: 11px; color: var(--text3); margin-bottom: .5rem; }
+  .suggestion-tag {
+    display: inline-block; font-size: 11px; padding: 3px 8px;
+    border-radius: 20px; border: 0.5px solid var(--border2);
+    color: var(--text2); cursor: pointer; margin: 2px 2px 2px 0;
+    transition: border-color .15s;
+  }
+  .suggestion-tag:hover { border-color: var(--border); color: var(--text); }
+  .project-list { display: flex; flex-direction: column; gap: 3px; }
+  .project-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 8px; border-radius: var(--radius-sm);
+    cursor: pointer; border: 0.5px solid transparent;
+    transition: background .15s;
+  }
+  .project-item:hover { background: var(--bg2); }
+  .project-item.active { background: var(--bg2); border-color: var(--border2); }
+  .p-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .p-name { font-size: 13px; flex: 1; }
+  .p-count {
+    font-size: 11px; color: var(--text3);
+    background: var(--bg3); padding: 2px 6px; border-radius: 20px;
+  }
+  .p-delete {
+    font-size: 14px; color: var(--text3); opacity: 0;
+    background: none; border: none; cursor: pointer; line-height: 1; padding: 0 2px;
+  }
+  .project-item:hover .p-delete { opacity: 1; }
+  .add-project-row { display: flex; gap: 6px; }
+  .add-project-row input {
+    flex: 1; padding: 6px 8px; font-size: 12px;
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text);
+    outline: none;
+  }
+  .add-project-row input:focus { border-color: var(--border2); }
+  .add-project-row button {
+    padding: 6px 10px; font-size: 16px; line-height: 1;
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text2); cursor: pointer;
+  }
+  .add-project-row button:hover { border-color: var(--border2); }
 
-    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; letter-spacing: 1px; }
+  /* centro — timer */
+  .center {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 2rem 1.5rem; gap: 1.5rem;
+  }
+  .no-project-msg {
+    text-align: center; color: var(--text3); font-size: 14px; line-height: 1.7;
+  }
+  .timer-wrap { text-align: center; width: 100%; }
+  .active-project-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 14px; border-radius: 20px;
+    font-size: 13px; font-weight: 500;
+    border: 0.5px solid var(--border2);
+    margin-bottom: 1.25rem;
+  }
+  .phase-label { font-size: 13px; color: var(--text2); margin-bottom: .5rem; }
+  .timer-display {
+    font-size: 72px; font-weight: 300; letter-spacing: -.03em;
+    font-variant-numeric: tabular-nums; line-height: 1;
+    margin-bottom: .75rem;
+  }
+  .progress-bar {
+    height: 2px; background: var(--border); border-radius: 2px;
+    margin: 0 auto 1rem; max-width: 280px; overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: var(--green); transition: width .5s linear; }
+  .cycle-wrap { display: flex; align-items: center; gap: 8px; justify-content: center; margin-bottom: 1.25rem; }
+  .cycle-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); transition: background .3s; }
+  .cycle-dot.done { background: var(--green); }
+  .cycle-label { font-size: 12px; color: var(--text3); }
+  .controls { display: flex; gap: 8px; justify-content: center; }
+  .btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 9px 20px; font-size: 14px; font-weight: 500;
+    border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
+    background: transparent; color: var(--text); cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .btn:hover { background: var(--bg2); }
+  .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn.primary:hover { background: var(--green-dark); }
+  .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
 
-    #status {
-      font-size: 0.95rem;
-      margin-bottom: 1rem;
-      opacity: 0.9;
-      font-weight: 500;
-    }
+  /* tarea actual */
+  .task-input-wrap { width: 100%; max-width: 360px; }
+  .task-label { font-size: 11px; color: var(--text3); margin-bottom: .4rem; text-transform: uppercase; letter-spacing: .08em; }
+  .task-input {
+    width: 100%; padding: 8px 12px; font-size: 14px;
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text); outline: none;
+  }
+  .task-input:focus { border-color: var(--border2); }
+  .task-input::placeholder { color: var(--text3); }
 
-    #timer {
-      font-size: 5rem;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-      line-height: 1;
-      margin: 1rem 0 1.5rem;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
+  /* sidebar derecho — dashboard */
+  .sidebar-right {
+    border-left: 0.5px solid var(--border);
+    padding: 1.25rem 1rem;
+    display: flex; flex-direction: column; gap: 1.25rem;
+    overflow-y: auto;
+    background: var(--bg);
+  }
+  .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .metric {
+    background: var(--bg2); border-radius: var(--radius-sm);
+    padding: 10px 12px;
+  }
+  .metric-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+  .metric-value { font-size: 20px; font-weight: 500; }
+  .metric-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
+  .metric.full { grid-column: span 2; }
 
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.8rem;
-      margin-bottom: 1.5rem;
-    }
+  /* heatmap semanal */
+  .week-heatmap { display: flex; flex-direction: column; gap: 6px; }
+  .week-days { display: flex; gap: 4px; }
+  .week-day {
+    flex: 1; text-align: center; font-size: 10px;
+    color: var(--text3); padding-bottom: 3px;
+  }
+  .week-bars { display: flex; gap: 4px; align-items: flex-end; height: 48px; }
+  .week-bar-wrap { flex: 1; display: flex; align-items: flex-end; }
+  .week-bar {
+    width: 100%; border-radius: 3px 3px 0 0;
+    background: var(--green); opacity: .15; min-height: 2px;
+    transition: height .3s, opacity .3s;
+  }
+  .week-bar.today { opacity: .9; }
+  .week-bar.has-data { opacity: .5; }
 
-    button {
-      padding: 0.9rem 1rem;
-      border: none;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 0.95rem;
-      touch-action: manipulation;
-    }
+  /* historial */
+  .history-header { display: flex; align-items: center; justify-content: space-between; }
+  .clear-btn {
+    font-size: 11px; color: var(--text3); background: none;
+    border: 0.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 3px 8px; cursor: pointer;
+  }
+  .clear-btn:hover { color: var(--text2); }
+  .history-list { display: flex; flex-direction: column; gap: 0; }
+  .history-item {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; padding: 6px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .history-item:last-child { border-bottom: none; }
+  .h-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .h-project { flex: 1; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .h-type { font-size: 10px; color: var(--text3); }
+  .h-time { font-size: 10px; color: var(--text3); margin-left: auto; flex-shrink: 0; }
+  .empty-msg { font-size: 12px; color: var(--text3); padding: 8px 0; line-height: 1.5; }
 
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-    button:hover:not(:disabled) { transform: translateY(-2px); }
-    button:active:not(:disabled) { transform: translateY(0); }
+  /* notificación */
+  .notif {
+    position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+    background: var(--bg2); border: 0.5px solid var(--border2);
+    border-radius: var(--radius); padding: .875rem 1.5rem;
+    font-size: 14px; text-align: center; z-index: 100;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    opacity: 0; transition: opacity .3s; pointer-events: none;
+    min-width: 240px;
+  }
+  .notif.show { opacity: 1; }
 
-    #startBtn { background: #00b894; color: white; }
-    #pauseBtn { background: #fdcb6e; color: #2d3436; }
-    #resetBtn { background: #636e72; color: white; }
-    #skipBtn  { background: #74b9ff; color: #2d3436; }
-
-    .progress {
-      font-size: 0.85rem;
-      margin-bottom: 1.5rem;
-      opacity: 0.8;
-    }
-
-    details.config {
-      background: rgba(0,0,0,0.2);
-      border-radius: 10px;
-      padding: 1rem;
-      text-align: left;
-    }
-
-    summary {
-      cursor: pointer;
-      font-weight: 600;
-      margin-bottom: 0.8rem;
-      outline: none;
-      padding: 0.3rem 0;
-    }
-
-    .config-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-      margin-top: 0.5rem;
-    }
-
-    .config-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .config-item {
-      display: flex;
-      flex-direction: column;
-      gap: 0.3rem;
-      flex: 1;
-      min-width: calc(50% - 0.5rem);
-    }
-
-    label {
-      font-size: 0.85rem;
-      opacity: 0.9;
-      line-height: 1.2;
-    }
-
-    input[type="number"] {
-      width: 100%;
-      padding: 0.5rem;
-      border-radius: 6px;
-      border: 1px solid rgba(255,255,255,0.3);
-      background: rgba(255,255,255,0.1);
-      color: inherit;
-      text-align: center;
-      font-size: 1rem;
-    }
-
-    #saveConfig {
-      width: 100%;
-      background: #0984e3;
-      color: white;
-      margin-top: 0.5rem;
-      padding: 0.9rem;
-    }
-
-    .notif-section {
-      background: rgba(0,0,0,0.25);
-      border-radius: 8px;
-      padding: 0.8rem;
-      margin-top: 0.5rem;
-    }
-
-    .notif-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    #enableNotifBtn {
-      background: #d63031;
-      color: white;
-      font-size: 0.85rem;
-      padding: 0.7rem 0.3rem;
-    }
-
-    #checkNotifBtn {
-      background: #6c5ce7;
-      color: white;
-      font-size: 0.85rem;
-      padding: 0.7rem 0.3rem;
-    }
-
-    #testNotifBtn {
-      background: #00b894;
-      color: white;
-      font-size: 0.85rem;
-      padding: 0.7rem 0.3rem;
-    }
-
-    #notifStatus {
-      font-size: 0.8rem;
-      font-weight: 600;
-      display: block;
-      text-align: center;
-      padding: 0.5rem;
-      border-radius: 6px;
-      background: rgba(0,0,0,0.3);
-      min-height: 2.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      word-wrap: break-word;
-      line-height: 1.3;
-    }
-
-    #notifStatus.granted {
-      background: rgba(0, 184, 148, 0.3);
-      color: #00b894;
-    }
-
-    #notifStatus.denied {
-      background: rgba(214, 48, 49, 0.3);
-      color: #ff7675;
-    }
-
-    #notifStatus.pending {
-      background: rgba(253, 203, 110, 0.3);
-      color: #fdcb6e;
-    }
-
-    #notifStatus.local {
-      background: rgba(116, 185, 255, 0.3);
-      color: #74b9ff;
-    }
-
-    /* Overlay de Alarma */
-    #alarmOverlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.85);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 10;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s;
-      padding: 2rem;
-    }
-
-    #alarmOverlay.visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    #alarmOverlay h2 {
-      font-size: 2.5rem;
-      margin-bottom: 1.5rem;
-      animation: pulseText 0.8s infinite alternate;
-      text-align: center;
-    }
-
-    @keyframes pulseText {
-      from { transform: scale(1); opacity: 0.8; }
-      to { transform: scale(1.05); opacity: 1; }
-    }
-
-    #dismissAlarm {
-      padding: 1rem 2rem;
-      font-size: 1.2rem;
-      background: #fff;
-      color: #2d3436;
-      border-radius: 50px;
-      border: none;
-      cursor: pointer;
-    }
-
-    .protocol-warning {
-      background: rgba(255, 118, 117, 0.2);
-      border: 1px solid rgba(255, 118, 117, 0.4);
-      border-radius: 8px;
-      padding: 0.8rem;
-      margin-top: 0.5rem;
-      font-size: 0.75rem;
-      text-align: left;
-      line-height: 1.4;
-    }
-
-    .protocol-warning a {
-      color: #74b9ff;
-      text-decoration: none;
-    }
-
-    .protocol-warning a:hover {
-      text-decoration: underline;
-    }
-
-    /* MOBILE OPTIMIZATIONS */
-    @media (max-width: 480px) {
-      body {
-        padding: 10px;
-      }
-
-      .container {
-        padding: 1.5rem 1rem;
-        max-width: 100%;
-      }
-
-      h1 {
-        font-size: 1.3rem;
-      }
-
-      #timer {
-        font-size: 4rem;
-        margin: 0.8rem 0 1.2rem;
-      }
-
-      .controls {
-        gap: 0.6rem;
-      }
-
-      button {
-        padding: 0.8rem 0.6rem;
-        font-size: 0.9rem;
-      }
-
-      .config-row {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .config-item {
-        min-width: 100%;
-      }
-
-      .notif-row {
-        grid-template-columns: 1fr;
-      }
-
-      #alarmOverlay h2 {
-        font-size: 2rem;
-      }
-
-      #dismissAlarm {
-        padding: 0.9rem 1.5rem;
-        font-size: 1.1rem;
-      }
-    }
-
-    @media (max-width: 360px) {
-      #timer {
-        font-size: 3.5rem;
-      }
-
-      h1 {
-        font-size: 1.2rem;
-      }
-
-      .container {
-        padding: 1.2rem 0.8rem;
-      }
-
-      button {
-        padding: 0.75rem 0.5rem;
-        font-size: 0.85rem;
-      }
-    }
-
-    /* Landscape mobile */
-    @media (max-height: 600px) and (orientation: landscape) {
-      .container {
-        padding: 1rem;
-        max-height: 95vh;
-        overflow-y: auto;
-      }
-
-      #timer {
-        font-size: 3.5rem;
-        margin: 0.5rem 0 1rem;
-      }
-
-      details.config {
-        max-height: 200px;
-        overflow-y: auto;
-      }
-    }
-
-    /* Prevent text selection on buttons */
-    button {
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-  </style>
+  /* responsive */
+  @media (max-width: 720px) {
+    .layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+    .sidebar-left { border-right: none; border-bottom: 0.5px solid var(--border); max-height: 200px; }
+    .sidebar-right { border-left: none; border-top: 0.5px solid var(--border); }
+    .energy-grid { grid-template-columns: 1fr; max-width: 280px; }
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .timer-display { font-size: 56px; }
+  }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>🍅 Pomodoro de Trabajo</h1>
-    <div id="status">Preparado para empezar</div>
-    <div id="timer">25:00</div>
 
-    <div class="controls">
-      <button id="startBtn">▶ Iniciar</button>
-      <button id="pauseBtn" disabled>⏸ Pausar</button>
-      <button id="resetBtn">↺ Reiniciar</button>
-      <button id="skipBtn">⏭ Saltar fase</button>
+<!-- ══ PANTALLA SELECCIÓN DE ENERGÍA ══ -->
+<div class="energy-screen" id="energyScreen">
+  <div class="energy-logo">FocusFlow</div>
+  <div class="energy-title">¿Cómo está tu energía<br>ahora mismo?</div>
+  <div class="energy-sub">Según tu nivel actual, te sugiero en qué proyectos y modo trabajar hoy.</div>
+
+  <div class="energy-grid">
+    <div class="energy-card high" data-energy="high" onclick="selectEnergy(this)">
+      <div class="energy-icon">⚡</div>
+      <div class="energy-name">Alta</div>
+      <div class="energy-desc">Fresco, listo para pensar con profundidad</div>
     </div>
-
-    <div class="progress">
-      Ciclo: <span id="cycleCount">0</span> / <span id="totalCycles">4</span>
+    <div class="energy-card mid" data-energy="mid" onclick="selectEnergy(this)">
+      <div class="energy-icon">🔋</div>
+      <div class="energy-name">Media</div>
+      <div class="energy-desc">Operativo, puedo ejecutar tareas concretas</div>
     </div>
+    <div class="energy-card low" data-energy="low" onclick="selectEnergy(this)">
+      <div class="energy-icon">🌙</div>
+      <div class="energy-name">Baja</div>
+      <div class="energy-desc">Cansado, mejor cosas livianas o gestión</div>
+    </div>
+  </div>
 
-    <details class="config">
-      <summary>⚙️ Configuración</summary>
-      <div class="config-panel">
-        <div class="config-row">
-          <div class="config-item">
-            <label>Tiempo de trabajo (min)</label>
-            <input type="number" id="workTime" value="25" min="1">
-          </div>
-          <div class="config-item">
-            <label>Descanso corto (min)</label>
-            <input type="number" id="shortBreak" value="5" min="1">
-          </div>
-        </div>
-        
-        <div class="config-row">
-          <div class="config-item">
-            <label>Descanso largo (min)</label>
-            <input type="number" id="longBreak" value="15" min="1">
-          </div>
-          <div class="config-item">
-            <label>Ciclos antes de largo</label>
-            <input type="number" id="cyclesBeforeLong" value="4" min="1">
-          </div>
-        </div>
-        
-        <button id="saveConfig">💾 Guardar configuración</button>
-        
-        <div class="notif-section">
-          <div class="notif-row">
-            <button id="enableNotifBtn">🔔 Pedir Permiso</button>
-            <button id="checkNotifBtn">🔍 Verificar</button>
-            <button id="testNotifBtn">🧪 Probar</button>
-          </div>
-          <span id="notifStatus" class="pending">⏳ Verificando...</span>
-          
-          <div id="protocolWarning" class="protocol-warning" style="display: none;">
-            ⚠️ <strong>Archivo local detectado.</strong><br>
-            Edge/Chrome bloquean notificaciones en <code>file://</code>.<br>
-            Para activarlas, usa un servidor web con HTTPS.
-          </div>
+  <button class="energy-continue" id="energyContinue" onclick="launchApp()">Empezar el día →</button>
+</div>
+
+<!-- ══ APP PRINCIPAL ══ -->
+<div class="app" id="mainApp">
+
+  <!-- topbar -->
+  <div class="topbar">
+    <div class="topbar-logo">FocusFlow</div>
+    <div class="mode-pill" id="modePill">
+      <div class="mode-dot" id="modeDot"></div>
+      <span id="modeLabel">—</span>
+    </div>
+    <button class="reset-day-btn" onclick="resetDay()">Cambiar modo</button>
+  </div>
+
+  <div class="layout">
+
+    <!-- ── SIDEBAR IZQUIERDO ── -->
+    <div class="sidebar-left">
+      <div class="sidebar-title">Proyectos</div>
+
+      <div class="suggestions-box" id="suggestionsBox">
+        <div class="suggestions-title" id="suggestionsTitle">Sugeridos para ahora</div>
+        <div id="suggestionsTags"></div>
+      </div>
+
+      <div class="project-list" id="projectList"></div>
+
+      <div style="margin-top:auto">
+        <div class="add-project-row">
+          <input id="newProjectInput" placeholder="Nuevo proyecto..." maxlength="28" />
+          <button onclick="addProject()" title="Agregar">+</button>
         </div>
       </div>
-    </details>
+    </div>
+
+    <!-- ── CENTRO ── -->
+    <div class="center" id="centerArea">
+      <div class="no-project-msg" id="noProjectMsg">
+        ← Seleccioná un proyecto<br>para empezar tu pomodoro
+      </div>
+
+      <div id="timerArea" style="display:none; width:100%; display:flex; flex-direction:column; align-items:center; gap:1.5rem;">
+        <div class="timer-wrap">
+          <div class="active-project-badge" id="activeBadge">
+            <div class="p-dot" id="activeDot"></div>
+            <span id="activeName">—</span>
+          </div>
+          <div class="phase-label" id="phaseLabel">Listo para empezar</div>
+          <div class="timer-display" id="timerDisplay">25:00</div>
+          <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+          <div class="cycle-wrap" id="cycleWrap">
+            <div class="cycle-dot" id="d0"></div>
+            <div class="cycle-dot" id="d1"></div>
+            <div class="cycle-dot" id="d2"></div>
+            <div class="cycle-dot" id="d3"></div>
+            <span class="cycle-label" id="cycleLabel">0 / 4</span>
+          </div>
+          <div class="controls">
+            <button class="btn" onclick="resetTimer()" title="Reiniciar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+              Reiniciar
+            </button>
+            <button class="btn primary" id="mainBtn" onclick="toggleTimer()">
+              <svg id="mainBtnIcon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+              <span id="mainBtnLabel">Iniciar</span>
+            </button>
+            <button class="btn" onclick="skipPhase()" title="Saltar fase">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="5,4 15,12 5,20"/><line x1="19" y1="4" x2="19" y2="20"/></svg>
+              Saltar
+            </button>
+          </div>
+        </div>
+
+        <div class="task-input-wrap">
+          <div class="task-label">¿En qué estás trabajando?</div>
+          <input class="task-input" id="taskInput" placeholder="Ej: revisar presupuesto Katuetei..." maxlength="60" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SIDEBAR DERECHO ── -->
+    <div class="sidebar-right">
+      <div class="sidebar-title">Hoy</div>
+
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Pomos</div>
+          <div class="metric-value" id="metPomos">0</div>
+          <div class="metric-sub">completados</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Foco</div>
+          <div class="metric-value" id="metFoco">0m</div>
+          <div class="metric-sub">trabajados</div>
+        </div>
+        <div class="metric full">
+          <div class="metric-label">Proyecto más trabajado</div>
+          <div class="metric-value" style="font-size:14px; margin-top:4px" id="metTop">—</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="sidebar-title" style="margin-bottom:.75rem">Esta semana</div>
+        <div class="week-heatmap">
+          <div class="week-days" id="weekDays"></div>
+          <div class="week-bars" id="weekBars"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="history-header">
+          <div class="sidebar-title">Historial</div>
+          <button class="clear-btn" onclick="clearHistory()">Borrar</button>
+        </div>
+        <div class="history-list" id="historyList" style="margin-top:.75rem"></div>
+      </div>
+    </div>
+
   </div>
+</div>
 
-  <!-- Overlay de Alarma -->
-  <div id="alarmOverlay">
-    <h2>🍅 ¡TIEMPO CUMPLIDO!</h2>
-    <button id="dismissAlarm">⏹ DETENER ALARMA</button>
-  </div>
+<!-- Notificación -->
+<div class="notif" id="notif"></div>
 
-  <script>
-    // Estado
-    let timeLeft = 0;
-    let timerTimeout = null;
-    let isRunning = false;
-    let currentPhase = 'work';
-    let cycleCount = 0;
-    let alarmTimeout = null;
-    let audioCtx = null;
+<script>
+// ── CONSTANTES ──
+const COLORS = ['#1D9E75','#378ADD','#D85A30','#7F77DD','#BA7517','#D4537E','#639922','#E24B4A'];
+const WORK_MIN = 25, SHORT_MIN = 5, LONG_MIN = 15, MAX_CYCLES = 4;
 
-    // DOM
-    const timerDisplay = document.getElementById('timer');
-    const statusDisplay = document.getElementById('status');
-    const cycleCountDisplay = document.getElementById('cycleCount');
-    const totalCyclesDisplay = document.getElementById('totalCycles');
-    const startBtn = document.getElementById('startBtn');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const skipBtn = document.getElementById('skipBtn');
-    const saveConfigBtn = document.getElementById('saveConfig');
-    const enableNotifBtn = document.getElementById('enableNotifBtn');
-    const checkNotifBtn = document.getElementById('checkNotifBtn');
-    const testNotifBtn = document.getElementById('testNotifBtn');
-    const notifStatus = document.getElementById('notifStatus');
-    const protocolWarning = document.getElementById('protocolWarning');
-    const alarmOverlay = document.getElementById('alarmOverlay');
-    const dismissAlarmBtn = document.getElementById('dismissAlarm');
+const ENERGY_CONFIG = {
+  high: {
+    label: '⚡ Energía alta',
+    color: '#1D9E75',
+    dotColor: '#1D9E75',
+    suggestions: ['Diseño BIM', 'Propuestas conceptuales', 'CimientoDigital', 'Contenido LinkedIn'],
+    tip: 'Modo creativo: ideal para diseño, propuestas y contenido'
+  },
+  mid: {
+    label: '🔋 Energía media',
+    color: '#378ADD',
+    dotColor: '#378ADD',
+    suggestions: ['Cómputos y costos', 'Documentación técnica', 'Presupuestos', 'ProspectaRed'],
+    tip: 'Modo técnico: ideal para cómputos, Revit y ejecución'
+  },
+  low: {
+    label: '🌙 Energía baja',
+    color: '#BA7517',
+    dotColor: '#BA7517',
+    suggestions: ['Responder mensajes', 'Actualizar CRM', 'Revisar facturas', 'Planificar mañana'],
+    tip: 'Modo gestión: ideal para emails, admin y organización'
+  }
+};
 
-    const workInput = document.getElementById('workTime');
-    const shortInput = document.getElementById('shortBreak');
-    const longInput = document.getElementById('longBreak');
-    const cyclesInput = document.getElementById('cyclesBeforeLong');
+// ── ESTADO ──
+let projects = JSON.parse(localStorage.getItem('ff_projects') || 'null');
+if (!projects) {
+  projects = [
+    { id: 1, name: 'Consultora Construcción', color: COLORS[0] },
+    { id: 2, name: 'CimientoDigital', color: COLORS[1] },
+    { id: 3, name: 'Katuetei Home', color: COLORS[2] },
+    { id: 4, name: 'ProspectaRed', color: COLORS[3] }
+  ];
+  saveProjects();
+}
+let sessions = JSON.parse(localStorage.getItem('ff_sessions') || '[]');
+let energyMode = null;
+let activeProject = null;
+let timer = null, running = false;
+let phase = 'work', cycleCount = 0;
+let timeLeft = WORK_MIN * 60, totalTime = WORK_MIN * 60;
 
-    // Configuración
-    function loadConfig() {
-      const saved = localStorage.getItem('pomodoroConfig');
-      return saved ? JSON.parse(saved) : { work: 25, short: 5, long: 15, cycles: 4 };
-    }
+function saveProjects() { localStorage.setItem('ff_projects', JSON.stringify(projects)); }
+function saveSessions() { localStorage.setItem('ff_sessions', JSON.stringify(sessions)); }
 
-    let config = loadConfig();
+// ── ENERGY SCREEN ──
+function selectEnergy(card) {
+  document.querySelectorAll('.energy-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  energyMode = card.dataset.energy;
+  document.getElementById('energyContinue').classList.add('active');
+}
 
-    function applyConfigToInputs() {
-      workInput.value = config.work;
-      shortInput.value = config.short;
-      longInput.value = config.long;
-      cyclesInput.value = config.cycles;
-      totalCyclesDisplay.textContent = config.cycles;
-    }
+function launchApp() {
+  if (!energyMode) return;
+  document.getElementById('energyScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.add('visible');
+  const cfg = ENERGY_CONFIG[energyMode];
+  document.getElementById('modeLabel').textContent = cfg.label;
+  document.getElementById('modeDot').style.background = cfg.dotColor;
+  // sugerencias
+  document.getElementById('suggestionsTitle').textContent = cfg.tip;
+  const tags = document.getElementById('suggestionsTags');
+  tags.innerHTML = cfg.suggestions.map(s =>
+    `<span class="suggestion-tag" onclick="addFromSuggestion('${s}')">${s}</span>`
+  ).join('');
+  renderProjects();
+  renderDashboard();
+  renderHistory();
+}
 
-    function setTimeFromPhase() {
-      const mins = currentPhase === 'work' ? config.work :
-                   currentPhase === 'short' ? config.short : config.long;
-      timeLeft = mins * 60;
-      updateDisplay();
-    }
+function resetDay() {
+  clearTimeout(timer); running = false; activeProject = null;
+  document.getElementById('mainApp').classList.remove('visible');
+  document.getElementById('energyScreen').classList.remove('hidden');
+  document.querySelectorAll('.energy-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('energyContinue').classList.remove('active');
+  energyMode = null;
+}
 
-    function updateDisplay() {
-      const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-      const s = (timeLeft % 60).toString().padStart(2, '0');
-      timerDisplay.textContent = `${m}:${s}`;
-      document.title = `${m}:${s} | ${currentPhase === 'work' ? 'Trabajo' : 'Descanso'}`;
-    }
+// ── PROYECTOS ──
+function addProject() {
+  const inp = document.getElementById('newProjectInput');
+  const name = inp.value.trim();
+  if (!name) return;
+  const color = COLORS[projects.length % COLORS.length];
+  projects.push({ id: Date.now(), name, color });
+  saveProjects();
+  inp.value = '';
+  renderProjects();
+}
 
-    function updatePhaseUI() {
-      const statuses = {
-        work: '🔥 Trabajando',
-        short: '☕ Descanso corto',
-        long: '🌴 Descanso largo'
-      };
-      statusDisplay.textContent = statuses[currentPhase];
-      document.body.className = currentPhase === 'work' ? '' : currentPhase;
-    }
+function addFromSuggestion(name) {
+  if (projects.find(p => p.name === name)) return;
+  const color = COLORS[projects.length % COLORS.length];
+  projects.push({ id: Date.now(), name, color });
+  saveProjects();
+  renderProjects();
+}
 
-    // 🔊 ALARMA RECURRENTE
-    function initAudio() {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-    }
+function deleteProject(id) {
+  projects = projects.filter(p => p.id !== id);
+  if (activeProject && activeProject.id === id) { activeProject = null; resetTimer(); updateTimerArea(); }
+  saveProjects();
+  renderProjects();
+}
 
-    function playBeep() {
-      if (!audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.frequency.value = 880;
-      osc.type = 'square';
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.1);
-    }
+function selectProject(id) {
+  const p = projects.find(pr => pr.id === id);
+  if (!p) return;
+  activeProject = p;
+  resetTimer();
+  renderProjects();
+  updateTimerArea();
+}
 
-    function startRecurringAlarm() {
-      stopAlarm();
-      document.body.classList.add('alarm');
-      alarmOverlay.classList.add('visible');
-      playBeep();
-      alarmTimeout = setInterval(() => playBeep(), 400);
-    }
+function renderProjects() {
+  const list = document.getElementById('projectList');
+  if (!projects.length) { list.innerHTML = '<div class="empty-msg">Agrega un proyecto para empezar</div>'; return; }
+  list.innerHTML = projects.map(p => {
+    const cnt = sessions.filter(s => s.projectId === p.id && isToday(s.ts) && s.type === 'work').length;
+    return `<div class="project-item${activeProject && activeProject.id === p.id ? ' active' : ''}" onclick="selectProject(${p.id})">
+      <div class="p-dot" style="background:${p.color}"></div>
+      <div class="p-name">${p.name}</div>
+      ${cnt ? `<div class="p-count">${cnt}</div>` : ''}
+      <button class="p-delete" onclick="event.stopPropagation();deleteProject(${p.id})" title="Eliminar">×</button>
+    </div>`;
+  }).join('');
+}
 
-    function stopAlarm() {
-      document.body.classList.remove('alarm');
-      alarmOverlay.classList.remove('visible');
-      if (alarmTimeout) {
-        clearInterval(alarmTimeout);
-        alarmTimeout = null;
-      }
-    }
+function updateTimerArea() {
+  const noMsg = document.getElementById('noProjectMsg');
+  const timerArea = document.getElementById('timerArea');
+  if (!activeProject) {
+    noMsg.style.display = 'block';
+    timerArea.style.display = 'none';
+    return;
+  }
+  noMsg.style.display = 'none';
+  timerArea.style.display = 'flex';
+  document.getElementById('activeName').textContent = activeProject.name;
+  document.getElementById('activeDot').style.background = activeProject.color;
+}
 
-    // 🔔 NOTIFICACIONES
-    function isLocalFile() {
-      return window.location.protocol === 'file:';
-    }
+// ── TIMER ──
+function fmt(s) { return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }
 
-    function updateNotifStatus() {
-      if (!("Notification" in window)) {
-        notifStatus.textContent = "❌ Navegador NO soporta notificaciones";
-        notifStatus.className = 'denied';
-        enableNotifBtn.disabled = true;
-        checkNotifBtn.disabled = true;
-        testNotifBtn.disabled = true;
-        return;
-      }
+function updateDisplay() {
+  document.getElementById('timerDisplay').textContent = fmt(timeLeft);
+  const pct = Math.round(((totalTime - timeLeft) / totalTime) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  const labels = { work: 'Tiempo de trabajo', short: 'Descanso corto', long: 'Descanso largo' };
+  document.getElementById('phaseLabel').textContent = labels[phase];
+  document.getElementById('cycleLabel').textContent = `${cycleCount} / ${MAX_CYCLES}`;
+  for (let i = 0; i < MAX_CYCLES; i++) {
+    const d = document.getElementById('d' + i);
+    if (d) d.className = 'cycle-dot' + (i < cycleCount ? ' done' : '');
+  }
+}
 
-      if (isLocalFile()) {
-        protocolWarning.style.display = 'block';
-        notifStatus.textContent = "📁 Modo local - Notificaciones bloqueadas";
-        notifStatus.className = 'local';
-        enableNotifBtn.disabled = true;
-        enableNotifBtn.textContent = "🚫 Bloqueado";
-        checkNotifBtn.disabled = false;
-        testNotifBtn.disabled = true;
-        return;
-      } else {
-        protocolWarning.style.display = 'none';
-      }
-      
-      const permission = Notification.permission;
-      console.log('Estado de notificaciones:', permission);
-      
-      if (permission === "granted") {
-        notifStatus.textContent = "✅ NOTIFICACIONES ACTIVADAS";
-        notifStatus.className = 'granted';
-        enableNotifBtn.disabled = true;
-        enableNotifBtn.textContent = "✓ Activadas";
-        checkNotifBtn.disabled = false;
-        testNotifBtn.disabled = false;
-      } else if (permission === "denied") {
-        notifStatus.textContent = "🚫 Permiso DENEGADO";
-        notifStatus.className = 'denied';
-        enableNotifBtn.disabled = true;
-        enableNotifBtn.textContent = "🔔 Bloqueado";
-        checkNotifBtn.disabled = false;
-        testNotifBtn.disabled = true;
-      } else {
-        notifStatus.textContent = "⏳ Pendiente de permiso";
-        notifStatus.className = 'pending';
-        enableNotifBtn.disabled = false;
-        enableNotifBtn.textContent = "🔔 Pedir Permiso";
-        checkNotifBtn.disabled = false;
-        testNotifBtn.disabled = false;
-      }
-    }
+function toggleTimer() {
+  if (!activeProject) { showNotif('Seleccioná un proyecto primero'); return; }
+  running = !running;
+  const btn = document.getElementById('mainBtn');
+  const icon = document.getElementById('mainBtnIcon');
+  const lbl = document.getElementById('mainBtnLabel');
+  if (running) {
+    icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    lbl.textContent = 'Pausar';
+    tick();
+  } else {
+    icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
+    lbl.textContent = 'Continuar';
+    clearTimeout(timer);
+  }
+}
 
-    async function requestNotificationPermission() {
-      if (!("Notification" in window)) {
-        alert("❌ Tu navegador no soporta notificaciones");
-        return;
-      }
+function tick() {
+  if (!running) return;
+  if (timeLeft <= 0) { completePhase(); return; }
+  timeLeft--;
+  updateDisplay();
+  timer = setTimeout(tick, 1000);
+}
 
-      if (isLocalFile()) {
-        alert("⚠️ No se pueden solicitar permisos en archivo local.\n\nLas notificaciones requieren HTTPS.");
-        return;
-      }
-      
-      try {
-        console.log('Solicitando permiso de notificación...');
-        const permission = await Notification.requestPermission();
-        console.log('Permiso obtenido:', permission);
-        
-        updateNotifStatus();
-        
-        if (permission === "granted") {
-          new Notification("🍅 ¡Notificaciones activadas!", { 
-            body: "Te avisaré cuando termine cada fase del Pomodoro.",
-            icon: "🍅"
-          });
-          setTimeout(() => {
-            alert("✅ ¡Perfecto! Las notificaciones están activas.");
-          }, 300);
-        } else if (permission === "denied") {
-          alert("❌ Permiso denegado.\n\nPara activarlo:\n1. Clic en 🔒 junto a la URL\n2. Cambia 'Notificaciones' a 'Permitir'\n3. Recarga la página");
-        }
-      } catch (error) {
-        console.error('Error al solicitar notificaciones:', error);
-        alert("Error: " + error.message);
-      }
-    }
+function completePhase() {
+  clearTimeout(timer); running = false;
+  const task = document.getElementById('taskInput').value.trim();
+  sessions.push({ projectId: activeProject.id, type: phase, ts: Date.now(), task });
+  saveSessions();
+  const isWork = phase === 'work';
+  if (isWork) {
+    cycleCount++;
+    if (cycleCount >= MAX_CYCLES) { phase = 'long'; totalTime = timeLeft = LONG_MIN * 60; cycleCount = 0; }
+    else { phase = 'short'; totalTime = timeLeft = SHORT_MIN * 60; }
+    showNotif('🍅 ¡Pomodoro completado! Tomá un descanso.');
+  } else {
+    phase = 'work'; totalTime = timeLeft = WORK_MIN * 60;
+    showNotif('☕ Descanso terminado. ¡A trabajar!');
+  }
+  const icon = document.getElementById('mainBtnIcon');
+  const lbl = document.getElementById('mainBtnLabel');
+  icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
+  lbl.textContent = 'Iniciar';
+  updateDisplay();
+  renderDashboard();
+  renderHistory();
+  renderProjects();
+  try { new Audio('data:audio/wav;base64,UklGRl9vT1dBVkVmbXQAA').play(); } catch(e) {}
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('FocusFlow', { body: isWork ? '🍅 Pomodoro completado!' : '☕ A trabajar!' });
+  }
+}
 
-    function sendSystemNotification(phase) {
-      if (!("Notification" in window)) {
-        console.warn('Notificaciones no disponibles');
-        return;
-      }
-      
-      if (Notification.permission !== "granted") {
-        console.warn('Permiso de notificación no concedido');
-        return;
-      }
-      
-      const messages = {
-        work: { title: "🔥 ¡Bloque completado!", body: "Es momento de tu descanso." },
-        short: { title: "☕ Descanso terminado", body: "¡De vuelta al trabajo!" },
-        long: { title: "🌴 Descanso largo terminado", body: "¡Nueva sesión lista!" }
-      };
-      
-      const msg = messages[phase] || { title: "⏱️ Pomodoro", body: "Tiempo completado." };
-      
-      try {
-        new Notification(msg.title, {
-          body: msg.body,
-          tag: "pomodoro-" + phase,
-          icon: "🍅",
-          requireInteraction: true
-        });
-        console.log('Notificación enviada:', msg.title);
-      } catch (error) {
-        console.error('Error al enviar notificación:', error);
-      }
-    }
+function resetTimer() {
+  clearTimeout(timer); running = false; phase = 'work';
+  timeLeft = totalTime = WORK_MIN * 60; cycleCount = 0;
+  updateDisplay();
+  const icon = document.getElementById('mainBtnIcon');
+  const lbl = document.getElementById('mainBtnLabel');
+  icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
+  lbl.textContent = 'Iniciar';
+}
 
-    function testNotification() {
-      if (!("Notification" in window)) {
-        alert("❌ Tu navegador no soporta notificaciones");
-        return;
-      }
+function skipPhase() { clearTimeout(timer); running = false; completePhase(); }
 
-      if (isLocalFile()) {
-        alert("⚠️ Las notificaciones no funcionan en archivos locales.");
-        return;
-      }
+// ── DASHBOARD ──
+function isToday(ts) {
+  const d = new Date(ts), n = new Date();
+  return d.toDateString() === n.toDateString();
+}
 
-      if (Notification.permission === "granted") {
-        new Notification("🧪 Prueba de notificación", {
-          body: "¡Esta es una notificación de prueba del Pomodoro!",
-          icon: "🍅",
-          requireInteraction: true
-        });
-        alert("✅ Notificación de prueba enviada.");
-      } else if (Notification.permission === "denied") {
-        alert("🚫 Las notificaciones están bloqueadas.");
-      } else {
-        alert("⏳ Primero debes conceder permiso.");
-      }
-    }
+function startOfWeek() {
+  const n = new Date(); n.setHours(0,0,0,0);
+  n.setDate(n.getDate() - n.getDay()); return n;
+}
 
-    // ⏱️ TEMPORIZADOR
-    let timerStart = null;
-    let originalTimeLeft = 0;
+function renderDashboard() {
+  const todayWork = sessions.filter(s => s.type === 'work' && isToday(s.ts));
+  const mins = todayWork.length * WORK_MIN;
+  document.getElementById('metPomos').textContent = todayWork.length;
+  document.getElementById('metFoco').textContent = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
 
-    function tick() {
-      if (!isRunning) return;
-      const now = Date.now();
-      const elapsed = Math.floor((now - timerStart) / 1000);
-      timeLeft = Math.max(0, originalTimeLeft - elapsed);
-      updateDisplay();
+  // top project today
+  const counts = {};
+  todayWork.forEach(s => { counts[s.projectId] = (counts[s.projectId] || 0) + 1; });
+  const topId = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
+  const topP = topId ? projects.find(p => p.id == topId) : null;
+  document.getElementById('metTop').textContent = topP ? `${topP.name} (${counts[topId]} 🍅)` : '—';
 
-      if (timeLeft <= 0) {
-        clearInterval(timerTimeout);
-        isRunning = false;
-        startBtn.disabled = false;
-        pauseBtn.disabled = true;
-        sendSystemNotification(currentPhase);
-        startRecurringAlarm();
-        return;
-      }
+  // heatmap semanal
+  const sw = startOfWeek();
+  const days = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const todayIdx = new Date().getDay();
+  let daysHTML = '', barsHTML = '';
+  let weekCounts = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(sw); d.setDate(sw.getDate() + i);
+    const cnt = sessions.filter(s => {
+      const sd = new Date(s.ts);
+      return s.type === 'work' && sd.toDateString() === d.toDateString();
+    }).length;
+    weekCounts.push(cnt);
+    daysHTML += `<div class="week-day">${days[i]}</div>`;
+  }
+  const maxCnt = Math.max(...weekCounts, 1);
+  for (let i = 0; i < 7; i++) {
+    const pct = Math.round((weekCounts[i] / maxCnt) * 100);
+    const cls = i === todayIdx ? 'today' : weekCounts[i] > 0 ? 'has-data' : '';
+    barsHTML += `<div class="week-bar-wrap"><div class="week-bar ${cls}" style="height:${Math.max(pct, 4)}%"></div></div>`;
+  }
+  document.getElementById('weekDays').innerHTML = daysHTML;
+  document.getElementById('weekBars').innerHTML = barsHTML;
+}
 
-      timerTimeout = setTimeout(tick, 250);
-    }
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const recent = [...sessions].reverse().slice(0, 10);
+  if (!recent.length) { list.innerHTML = '<div class="empty-msg">Sin sesiones aún.<br>¡Arrancá tu primer pomodoro!</div>'; return; }
+  list.innerHTML = recent.map(s => {
+    const p = projects.find(pr => pr.id === s.projectId);
+    const color = p ? p.color : '#666';
+    const name = p ? p.name : 'Proyecto eliminado';
+    const t = new Date(s.ts).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+    const typeLabel = s.type === 'work' ? '🍅' : '☕';
+    return `<div class="history-item">
+      <div class="h-dot" style="background:${color}"></div>
+      <div class="h-project" title="${s.task || name}">${s.task || name}</div>
+      <div class="h-type">${typeLabel}</div>
+      <div class="h-time">${t}</div>
+    </div>`;
+  }).join('');
+}
 
-    function startTimer() {
-      if (isRunning || timeLeft <= 0) return;
-      initAudio();
-      isRunning = true;
-      startBtn.disabled = true;
-      pauseBtn.disabled = false;
-      timerStart = Date.now();
-      originalTimeLeft = timeLeft;
-      tick();
-    }
+function clearHistory() {
+  if (!confirm('¿Borrar todo el historial de sesiones?')) return;
+  sessions = []; saveSessions();
+  renderDashboard(); renderHistory(); renderProjects();
+}
 
-    function pauseTimer() {
-      if (!isRunning) return;
-      isRunning = false;
-      clearTimeout(timerTimeout);
-      startBtn.disabled = false;
-      pauseBtn.disabled = true;
-    }
+function showNotif(msg) {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 3500);
+}
 
-    function resetTimer() {
-      pauseTimer();
-      stopAlarm();
-      cycleCount = 0;
-      currentPhase = 'work';
-      cycleCountDisplay.textContent = 0;
-      setTimeFromPhase();
-      updatePhaseUI();
-    }
-
-    function nextPhase() {
-      stopAlarm();
-      if (currentPhase === 'work') {
-        cycleCount++;
-        cycleCountDisplay.textContent = cycleCount;
-        if (cycleCount >= config.cycles) {
-          currentPhase = 'long';
-          cycleCount = 0;
-          cycleCountDisplay.textContent = 0;
-        } else {
-          currentPhase = 'short';
-        }
-      } else {
-        currentPhase = 'work';
-      }
-      setTimeFromPhase();
-      updatePhaseUI();
-    }
-
-    function saveConfig() {
-      config = {
-        work: parseInt(workInput.value) || 25,
-        short: parseInt(shortInput.value) || 5,
-        long: parseInt(longInput.value) || 15,
-        cycles: parseInt(cyclesInput.value) || 4
-      };
-      localStorage.setItem('pomodoroConfig', JSON.stringify(config));
-      totalCyclesDisplay.textContent = config.cycles;
-      if (!isRunning) {
-        setTimeFromPhase();
-        updatePhaseUI();
-      }
-      saveConfigBtn.textContent = '✅ Guardado';
-      setTimeout(() => saveConfigBtn.textContent = '💾 Guardar configuración', 1500);
-    }
-
-    // Eventos
-    startBtn.addEventListener('click', startTimer);
-    pauseBtn.addEventListener('click', pauseTimer);
-    resetBtn.addEventListener('click', resetTimer);
-    skipBtn.addEventListener('click', () => { pauseTimer(); nextPhase(); });
-    saveConfigBtn.addEventListener('click', saveConfig);
-    enableNotifBtn.addEventListener('click', requestNotificationPermission);
-    checkNotifBtn.addEventListener('click', () => {
-      updateNotifStatus();
-      const perm = Notification.permission;
-      alert(`Estado: ${perm}`);
-    });
-    testNotifBtn.addEventListener('click', testNotification);
-    dismissAlarmBtn.addEventListener('click', () => {
-      stopAlarm();
-      nextPhase();
-    });
-
-    // Inicialización
-    applyConfigToInputs();
-    setTimeFromPhase();
-    updatePhaseUI();
-    
-    setTimeout(() => {
-      updateNotifStatus();
-    }, 300);
-  </script>
+// ── INIT ──
+document.getElementById('newProjectInput').addEventListener('keydown', e => { if (e.key === 'Enter') addProject(); });
+if ('Notification' in window) Notification.requestPermission();
+updateDisplay();
+</script>
 </body>
 </html>
