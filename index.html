@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>FocusFlow — Pomodoro con modos de energía</title>
+<meta name="description" content="Pomodoro con modos de energía para múltiples proyectos. Para consultores y freelancers independientes.">
+<meta name="theme-color" content="#1D9E75">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FocusFlow">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icons/favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
   :root {
     --bg: #0f0f0f;
@@ -764,6 +773,16 @@ function showNotif(msg) {
 document.getElementById('newProjectInput').addEventListener('keydown', e => { if (e.key === 'Enter') addProject(); });
 if ('Notification' in window) Notification.requestPermission();
 updateDisplay();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/pomodoro/sw.js')
+      .then(() => console.log('FocusFlow SW registrado'))
+      .catch(e => console.warn('SW error:', e));
+  });
+}
 </script>
 </body>
 </html>
