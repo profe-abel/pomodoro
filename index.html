@@ -282,6 +282,53 @@
   .h-time { font-size: 10px; color: var(--text3); margin-left: auto; flex-shrink: 0; }
   .empty-msg { font-size: 12px; color: var(--text3); padding: 8px 0; line-height: 1.5; }
 
+  /* ── MODAL CIERRE DE POMODORO ── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.72);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1.5rem; opacity: 0; pointer-events: none; transition: opacity .25s;
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--bg2); border: 0.5px solid var(--border2);
+    border-radius: var(--radius); padding: 1.75rem 1.5rem;
+    width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 1rem;
+  }
+  .modal-header { display: flex; align-items: center; gap: 10px; }
+  .modal-icon { font-size: 24px; }
+  .modal-title { font-size: 16px; font-weight: 500; }
+  .modal-sub { font-size: 13px; color: var(--text2); line-height: 1.5; }
+  .modal-project { font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 6px; }
+  .modal textarea {
+    width: 100%; padding: 10px 12px; font-size: 14px; font-family: inherit;
+    background: var(--bg3); border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm); color: var(--text);
+    resize: none; height: 80px; outline: none; line-height: 1.5;
+  }
+  .modal textarea:focus { border-color: var(--green); }
+  .modal textarea::placeholder { color: var(--text3); }
+  .modal-actions { display: flex; gap: 8px; }
+  .modal-actions button { flex: 1; padding: 10px; font-size: 14px; font-weight: 500;
+    border-radius: var(--radius-sm); cursor: pointer; border: 0.5px solid var(--border2);
+    transition: background .15s; }
+  .modal-skip { background: transparent; color: var(--text2); }
+  .modal-skip:hover { background: var(--bg3); }
+  .modal-save { background: var(--green); color: #fff; border-color: var(--green); }
+  .modal-save:hover { background: var(--green-dark); }
+  .modal-chars { font-size: 11px; color: var(--text3); text-align: right; margin-top: -6px; }
+
+  /* btn CSV en sidebar */
+  .export-btn {
+    width: 100%; padding: 8px; font-size: 12px; font-weight: 500;
+    background: transparent; color: var(--text2);
+    border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: background .15s, color .15s;
+  }
+  .export-btn:hover { background: var(--bg2); color: var(--text); }
+  .export-btn svg { width: 13px; height: 13px; }
+
   /* notificación */
   .notif {
     position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
@@ -449,8 +496,39 @@
         </div>
         <div class="history-list" id="historyList" style="margin-top:.75rem"></div>
       </div>
+
+      <button class="export-btn" onclick="exportCSV()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7,10 12,15 17,10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Exportar historial CSV
+      </button>
     </div>
 
+  </div>
+</div>
+
+<!-- ══ MODAL CIERRE DE POMODORO ══ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon">🍅</div>
+      <div>
+        <div class="modal-title">¡Pomodoro completado!</div>
+        <div class="modal-project" id="modalProject"></div>
+      </div>
+    </div>
+    <div class="modal-sub">¿Dónde quedaste? Anotá una línea para retomar rápido la próxima vez.</div>
+    <div>
+      <textarea id="closeNote" placeholder="Ej: revisar presupuesto Katuetei — faltan rubros de instalaciones..." maxlength="200"></textarea>
+      <div class="modal-chars"><span id="closeNoteChars">0</span>/200</div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-skip" onclick="dismissModal(false)">Saltar</button>
+      <button class="modal-save" onclick="dismissModal(true)">Guardar y descansar →</button>
+    </div>
   </div>
 </div>
 
@@ -647,17 +725,50 @@ function tick() {
   timer = setTimeout(tick, 1000);
 }
 
+// pendingSession guarda los datos hasta que el modal confirma
+let pendingSession = null;
+
 function completePhase() {
   clearTimeout(timer); running = false;
   const task = document.getElementById('taskInput').value.trim();
-  sessions.push({ projectId: activeProject.id, type: phase, ts: Date.now(), task });
-  saveSessions();
   const isWork = phase === 'work';
+
+  pendingSession = { projectId: activeProject.id, type: phase, ts: Date.now(), task, note: '' };
+
+  if (isWork) {
+    // abrir modal de cierre antes de pasar al descanso
+    openCloseModal();
+  } else {
+    // descanso terminado: registrar directo sin modal
+    commitPhase(false);
+  }
+
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(isWork ? 880 : 660, ctx.currentTime);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+    osc.start(); osc.stop(ctx.currentTime + 0.6);
+  } catch(e) {}
+
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('FocusFlow', { body: isWork ? '🍅 Pomodoro completado!' : '☕ A trabajar!' });
+  }
+}
+
+function commitPhase(isWork) {
+  if (pendingSession) {
+    sessions.push(pendingSession);
+    saveSessions();
+    pendingSession = null;
+  }
   if (isWork) {
     cycleCount++;
     if (cycleCount >= MAX_CYCLES) { phase = 'long'; totalTime = timeLeft = LONG_MIN * 60; cycleCount = 0; }
     else { phase = 'short'; totalTime = timeLeft = SHORT_MIN * 60; }
-    showNotif('🍅 ¡Pomodoro completado! Tomá un descanso.');
   } else {
     phase = 'work'; totalTime = timeLeft = WORK_MIN * 60;
     showNotif('☕ Descanso terminado. ¡A trabajar!');
@@ -670,10 +781,63 @@ function completePhase() {
   renderDashboard();
   renderHistory();
   renderProjects();
-  try { new Audio('data:audio/wav;base64,UklGRl9vT1dBVkVmbXQAA').play(); } catch(e) {}
-  if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification('FocusFlow', { body: isWork ? '🍅 Pomodoro completado!' : '☕ A trabajar!' });
+}
+
+// ── MODAL CIERRE ──
+function openCloseModal() {
+  const p = projects.find(pr => pr.id === pendingSession.projectId);
+  document.getElementById('modalProject').innerHTML =
+    `<div class="p-dot" style="background:${p ? p.color : '#666'}"></div>${p ? p.name : ''}`;
+  document.getElementById('closeNote').value = '';
+  document.getElementById('closeNoteChars').textContent = '0';
+  document.getElementById('modalOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('closeNote').focus(), 100);
+}
+
+function dismissModal(save) {
+  if (save) {
+    const note = document.getElementById('closeNote').value.trim();
+    if (pendingSession) pendingSession.note = note;
   }
+  document.getElementById('modalOverlay').classList.remove('show');
+  commitPhase(true);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('closeNote').addEventListener('input', function() {
+    document.getElementById('closeNoteChars').textContent = this.value.length;
+  });
+  // cerrar con Enter+Ctrl o Escape
+  document.getElementById('closeNote').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) dismissModal(true);
+    if (e.key === 'Escape') dismissModal(false);
+  });
+});
+
+// ── EXPORTAR CSV ──
+function exportCSV() {
+  if (!sessions.length) { showNotif('Sin sesiones para exportar'); return; }
+  const header = ['Fecha','Hora','Proyecto','Tipo','Tarea','Nota','Minutos'];
+  const rows = sessions.map(s => {
+    const p = projects.find(pr => pr.id === s.projectId);
+    const d = new Date(s.ts);
+    const fecha = d.toLocaleDateString('es-PY');
+    const hora  = d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+    const proyecto = p ? p.name : 'Eliminado';
+    const tipo = s.type === 'work' ? 'Trabajo' : s.type === 'short' ? 'Descanso corto' : 'Descanso largo';
+    const tarea = (s.task || '').replace(/"/g, '""');
+    const nota  = (s.note || '').replace(/"/g, '""');
+    const mins  = s.type === 'work' ? WORK_MIN : s.type === 'short' ? SHORT_MIN : LONG_MIN;
+    return [fecha, hora, `"${proyecto}"`, tipo, `"${tarea}"`, `"${nota}"`, mins];
+  });
+  const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date().toISOString().slice(0,10);
+  a.href = url; a.download = `focusflow-${today}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  showNotif(`CSV exportado — ${sessions.length} sesiones`);
 }
 
 function resetTimer() {
