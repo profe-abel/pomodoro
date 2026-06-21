@@ -13,344 +13,11 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icons/favicon.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<style>
-  :root {
-    --bg: #0f0f0f;
-    --bg2: #181818;
-    --bg3: #222;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.15);
-    --text: #f0f0f0;
-    --text2: #999;
-    --text3: #666;
-    --radius: 12px;
-    --radius-sm: 8px;
-    --green: #1D9E75;
-    --green-dark: #0F6E56;
-    --blue: #378ADD;
-    --amber: #BA7517;
-    --purple: #7F77DD;
-    --coral: #D85A30;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* ── ENERGY SELECTOR ── */
-  .energy-screen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 2rem;
-    gap: 2rem;
-  }
-  .energy-screen.hidden { display: none; }
-  .energy-logo { font-size: 13px; font-weight: 600; letter-spacing: .12em; color: var(--text3); text-transform: uppercase; }
-  .energy-title { font-size: 28px; font-weight: 500; text-align: center; line-height: 1.3; }
-  .energy-sub { font-size: 15px; color: var(--text2); text-align: center; max-width: 340px; line-height: 1.6; }
-  .energy-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; width: 100%; max-width: 560px; }
-  .energy-card {
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.25rem 1rem;
-    cursor: pointer;
-    background: var(--bg2);
-    transition: border-color .2s, transform .15s;
-    text-align: center;
-  }
-  .energy-card:hover { border-color: var(--border2); transform: translateY(-2px); }
-  .energy-card.selected { border-color: currentColor; }
-  .energy-icon { font-size: 28px; margin-bottom: .5rem; }
-  .energy-name { font-size: 14px; font-weight: 500; margin-bottom: .25rem; }
-  .energy-desc { font-size: 12px; color: var(--text2); line-height: 1.4; }
-  .energy-card.high { color: var(--green); }
-  .energy-card.mid { color: var(--blue); }
-  .energy-card.low { color: var(--amber); }
-  .energy-continue {
-    padding: 12px 32px; font-size: 15px; font-weight: 500;
-    background: var(--green); color: #fff; border: none;
-    border-radius: var(--radius-sm); cursor: pointer;
-    transition: background .15s; opacity: .4; pointer-events: none;
-  }
-  .energy-continue.active { opacity: 1; pointer-events: all; }
-  .energy-continue.active:hover { background: var(--green-dark); }
-
-  /* ── MAIN APP ── */
-  .app { display: none; flex-direction: column; min-height: 100vh; }
-  .app.visible { display: flex; }
-
-  /* top bar */
-  .topbar {
-    display: flex; align-items: center; gap: 12px;
-    padding: .875rem 1.5rem;
-    border-bottom: 0.5px solid var(--border);
-    background: var(--bg);
-  }
-  .topbar-logo { font-size: 13px; font-weight: 600; letter-spacing: .1em; color: var(--text3); text-transform: uppercase; flex: 1; }
-  .mode-pill {
-    display: flex; align-items: center; gap: 6px;
-    padding: 4px 12px; border-radius: 20px;
-    font-size: 12px; font-weight: 500;
-    border: 0.5px solid var(--border2);
-  }
-  .mode-dot { width: 7px; height: 7px; border-radius: 50%; }
-  .reset-day-btn {
-    font-size: 12px; color: var(--text3); background: none;
-    border: 0.5px solid var(--border); border-radius: var(--radius-sm);
-    padding: 4px 10px; cursor: pointer;
-  }
-  .reset-day-btn:hover { border-color: var(--border2); color: var(--text2); }
-
-  /* layout */
-  .layout { display: grid; grid-template-columns: 240px 1fr 220px; flex: 1; overflow: hidden; }
-
-  /* sidebar izquierdo — proyectos */
-  .sidebar-left {
-    border-right: 0.5px solid var(--border);
-    padding: 1.25rem 1rem;
-    display: flex; flex-direction: column; gap: 1rem;
-    overflow-y: auto;
-    background: var(--bg);
-  }
-  .sidebar-title {
-    font-size: 11px; font-weight: 600; letter-spacing: .1em;
-    color: var(--text3); text-transform: uppercase; padding: 0 4px;
-  }
-  .suggestions-box {
-    background: var(--bg2); border: 0.5px solid var(--border);
-    border-radius: var(--radius-sm); padding: .75rem;
-  }
-  .suggestions-title { font-size: 11px; color: var(--text3); margin-bottom: .5rem; }
-  .suggestion-tag {
-    display: inline-block; font-size: 11px; padding: 3px 8px;
-    border-radius: 20px; border: 0.5px solid var(--border2);
-    color: var(--text2); cursor: pointer; margin: 2px 2px 2px 0;
-    transition: border-color .15s;
-  }
-  .suggestion-tag:hover { border-color: var(--border); color: var(--text); }
-  .project-list { display: flex; flex-direction: column; gap: 3px; }
-  .project-item {
-    display: flex; align-items: center; gap: 8px;
-    padding: 7px 8px; border-radius: var(--radius-sm);
-    cursor: pointer; border: 0.5px solid transparent;
-    transition: background .15s;
-  }
-  .project-item:hover { background: var(--bg2); }
-  .project-item.active { background: var(--bg2); border-color: var(--border2); }
-  .p-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .p-name { font-size: 13px; flex: 1; }
-  .p-count {
-    font-size: 11px; color: var(--text3);
-    background: var(--bg3); padding: 2px 6px; border-radius: 20px;
-  }
-  .p-delete {
-    font-size: 14px; color: var(--text3); opacity: 0;
-    background: none; border: none; cursor: pointer; line-height: 1; padding: 0 2px;
-  }
-  .project-item:hover .p-delete { opacity: 1; }
-  .add-project-row { display: flex; gap: 6px; }
-  .add-project-row input {
-    flex: 1; padding: 6px 8px; font-size: 12px;
-    background: var(--bg2); border: 0.5px solid var(--border);
-    border-radius: var(--radius-sm); color: var(--text);
-    outline: none;
-  }
-  .add-project-row input:focus { border-color: var(--border2); }
-  .add-project-row button {
-    padding: 6px 10px; font-size: 16px; line-height: 1;
-    background: var(--bg2); border: 0.5px solid var(--border);
-    border-radius: var(--radius-sm); color: var(--text2); cursor: pointer;
-  }
-  .add-project-row button:hover { border-color: var(--border2); }
-
-  /* centro — timer */
-  .center {
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 2rem 1.5rem; gap: 1.5rem;
-  }
-  .no-project-msg {
-    text-align: center; color: var(--text3); font-size: 14px; line-height: 1.7;
-  }
-  .timer-wrap { text-align: center; width: 100%; }
-  .active-project-badge {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 5px 14px; border-radius: 20px;
-    font-size: 13px; font-weight: 500;
-    border: 0.5px solid var(--border2);
-    margin-bottom: 1.25rem;
-  }
-  .phase-label { font-size: 13px; color: var(--text2); margin-bottom: .5rem; }
-  .timer-display {
-    font-size: 72px; font-weight: 300; letter-spacing: -.03em;
-    font-variant-numeric: tabular-nums; line-height: 1;
-    margin-bottom: .75rem;
-  }
-  .progress-bar {
-    height: 2px; background: var(--border); border-radius: 2px;
-    margin: 0 auto 1rem; max-width: 280px; overflow: hidden;
-  }
-  .progress-fill { height: 100%; background: var(--green); transition: width .5s linear; }
-  .cycle-wrap { display: flex; align-items: center; gap: 8px; justify-content: center; margin-bottom: 1.25rem; }
-  .cycle-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); transition: background .3s; }
-  .cycle-dot.done { background: var(--green); }
-  .cycle-label { font-size: 12px; color: var(--text3); }
-  .controls { display: flex; gap: 8px; justify-content: center; }
-  .btn {
-    display: flex; align-items: center; gap: 6px;
-    padding: 9px 20px; font-size: 14px; font-weight: 500;
-    border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
-    background: transparent; color: var(--text); cursor: pointer;
-    transition: background .15s, border-color .15s;
-  }
-  .btn:hover { background: var(--bg2); }
-  .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
-  .btn.primary:hover { background: var(--green-dark); }
-  .btn svg { width: 16px; height: 16px; flex-shrink: 0; }
-
-  /* tarea actual */
-  .task-input-wrap { width: 100%; max-width: 360px; }
-  .task-label { font-size: 11px; color: var(--text3); margin-bottom: .4rem; text-transform: uppercase; letter-spacing: .08em; }
-  .task-input {
-    width: 100%; padding: 8px 12px; font-size: 14px;
-    background: var(--bg2); border: 0.5px solid var(--border);
-    border-radius: var(--radius-sm); color: var(--text); outline: none;
-  }
-  .task-input:focus { border-color: var(--border2); }
-  .task-input::placeholder { color: var(--text3); }
-
-  /* sidebar derecho — dashboard */
-  .sidebar-right {
-    border-left: 0.5px solid var(--border);
-    padding: 1.25rem 1rem;
-    display: flex; flex-direction: column; gap: 1.25rem;
-    overflow-y: auto;
-    background: var(--bg);
-  }
-  .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .metric {
-    background: var(--bg2); border-radius: var(--radius-sm);
-    padding: 10px 12px;
-  }
-  .metric-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
-  .metric-value { font-size: 20px; font-weight: 500; }
-  .metric-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
-  .metric.full { grid-column: span 2; }
-
-  /* heatmap semanal */
-  .week-heatmap { display: flex; flex-direction: column; gap: 6px; }
-  .week-days { display: flex; gap: 4px; }
-  .week-day {
-    flex: 1; text-align: center; font-size: 10px;
-    color: var(--text3); padding-bottom: 3px;
-  }
-  .week-bars { display: flex; gap: 4px; align-items: flex-end; height: 48px; }
-  .week-bar-wrap { flex: 1; display: flex; align-items: flex-end; }
-  .week-bar {
-    width: 100%; border-radius: 3px 3px 0 0;
-    background: var(--green); opacity: .15; min-height: 2px;
-    transition: height .3s, opacity .3s;
-  }
-  .week-bar.today { opacity: .9; }
-  .week-bar.has-data { opacity: .5; }
-
-  /* historial */
-  .history-header { display: flex; align-items: center; justify-content: space-between; }
-  .clear-btn {
-    font-size: 11px; color: var(--text3); background: none;
-    border: 0.5px solid var(--border); border-radius: var(--radius-sm);
-    padding: 3px 8px; cursor: pointer;
-  }
-  .clear-btn:hover { color: var(--text2); }
-  .history-list { display: flex; flex-direction: column; gap: 0; }
-  .history-item {
-    display: flex; align-items: center; gap: 7px;
-    font-size: 12px; padding: 6px 0;
-    border-bottom: 0.5px solid var(--border);
-  }
-  .history-item:last-child { border-bottom: none; }
-  .h-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-  .h-project { flex: 1; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .h-type { font-size: 10px; color: var(--text3); }
-  .h-time { font-size: 10px; color: var(--text3); margin-left: auto; flex-shrink: 0; }
-  .empty-msg { font-size: 12px; color: var(--text3); padding: 8px 0; line-height: 1.5; }
-
-  /* ── MODAL CIERRE DE POMODORO ── */
-  .modal-overlay {
-    position: fixed; inset: 0; z-index: 200;
-    background: rgba(0,0,0,0.72);
-    display: flex; align-items: center; justify-content: center;
-    padding: 1.5rem; opacity: 0; pointer-events: none; transition: opacity .25s;
-  }
-  .modal-overlay.show { opacity: 1; pointer-events: all; }
-  .modal {
-    background: var(--bg2); border: 0.5px solid var(--border2);
-    border-radius: var(--radius); padding: 1.75rem 1.5rem;
-    width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 1rem;
-  }
-  .modal-header { display: flex; align-items: center; gap: 10px; }
-  .modal-icon { font-size: 24px; }
-  .modal-title { font-size: 16px; font-weight: 500; }
-  .modal-sub { font-size: 13px; color: var(--text2); line-height: 1.5; }
-  .modal-project { font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 6px; }
-  .modal textarea {
-    width: 100%; padding: 10px 12px; font-size: 14px; font-family: inherit;
-    background: var(--bg3); border: 0.5px solid var(--border2);
-    border-radius: var(--radius-sm); color: var(--text);
-    resize: none; height: 80px; outline: none; line-height: 1.5;
-  }
-  .modal textarea:focus { border-color: var(--green); }
-  .modal textarea::placeholder { color: var(--text3); }
-  .modal-actions { display: flex; gap: 8px; }
-  .modal-actions button { flex: 1; padding: 10px; font-size: 14px; font-weight: 500;
-    border-radius: var(--radius-sm); cursor: pointer; border: 0.5px solid var(--border2);
-    transition: background .15s; }
-  .modal-skip { background: transparent; color: var(--text2); }
-  .modal-skip:hover { background: var(--bg3); }
-  .modal-save { background: var(--green); color: #fff; border-color: var(--green); }
-  .modal-save:hover { background: var(--green-dark); }
-  .modal-chars { font-size: 11px; color: var(--text3); text-align: right; margin-top: -6px; }
-
-  /* btn CSV en sidebar */
-  .export-btn {
-    width: 100%; padding: 8px; font-size: 12px; font-weight: 500;
-    background: transparent; color: var(--text2);
-    border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
-    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
-    transition: background .15s, color .15s;
-  }
-  .export-btn:hover { background: var(--bg2); color: var(--text); }
-  .export-btn svg { width: 13px; height: 13px; }
-
-  /* notificación */
-  .notif {
-    position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
-    background: var(--bg2); border: 0.5px solid var(--border2);
-    border-radius: var(--radius); padding: .875rem 1.5rem;
-    font-size: 14px; text-align: center; z-index: 100;
-    box-shadow: 0 8px 32px rgba(0,0,0,.5);
-    opacity: 0; transition: opacity .3s; pointer-events: none;
-    min-width: 240px;
-  }
-  .notif.show { opacity: 1; }
-
-  /* responsive */
-  @media (max-width: 720px) {
-    .layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
-    .sidebar-left { border-right: none; border-bottom: 0.5px solid var(--border); max-height: 200px; }
-    .sidebar-right { border-left: none; border-top: 0.5px solid var(--border); }
-    .energy-grid { grid-template-columns: 1fr; max-width: 280px; }
-    .metrics { grid-template-columns: 1fr 1fr; }
-    .timer-display { font-size: 56px; }
-  }
-</style>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/timer.css">
+<link rel="stylesheet" href="css/dashboard.css">
+<link rel="stylesheet" href="css/modals.css">
 </head>
 <body>
 
@@ -359,7 +26,6 @@
   <div class="energy-logo">FocusFlow</div>
   <div class="energy-title">¿Cómo está tu energía<br>ahora mismo?</div>
   <div class="energy-sub">Según tu nivel actual, te sugiero en qué proyectos y modo trabajar hoy.</div>
-
   <div class="energy-grid">
     <div class="energy-card high" data-energy="high" onclick="selectEnergy(this)">
       <div class="energy-icon">⚡</div>
@@ -377,36 +43,35 @@
       <div class="energy-desc">Cansado, mejor cosas livianas o gestión</div>
     </div>
   </div>
-
   <button class="energy-continue" id="energyContinue" onclick="launchApp()">Empezar el día →</button>
 </div>
 
 <!-- ══ APP PRINCIPAL ══ -->
 <div class="app" id="mainApp">
 
-  <!-- topbar -->
+  <!-- Topbar -->
   <div class="topbar">
     <div class="topbar-logo">FocusFlow</div>
     <div class="mode-pill" id="modePill">
       <div class="mode-dot" id="modeDot"></div>
       <span id="modeLabel">—</span>
     </div>
+    <button class="day-close-btn hidden" id="dayCloseBtn" onclick="openDayModal()">
+      Cerrar día →
+    </button>
     <button class="reset-day-btn" onclick="resetDay()">Cambiar modo</button>
   </div>
 
   <div class="layout">
 
-    <!-- ── SIDEBAR IZQUIERDO ── -->
+    <!-- ── SIDEBAR IZQUIERDO — Proyectos ── -->
     <div class="sidebar-left">
       <div class="sidebar-title">Proyectos</div>
-
       <div class="suggestions-box" id="suggestionsBox">
         <div class="suggestions-title" id="suggestionsTitle">Sugeridos para ahora</div>
         <div id="suggestionsTags"></div>
       </div>
-
       <div class="project-list" id="projectList"></div>
-
       <div style="margin-top:auto">
         <div class="add-project-row">
           <input id="newProjectInput" placeholder="Nuevo proyecto..." maxlength="28" />
@@ -415,13 +80,12 @@
       </div>
     </div>
 
-    <!-- ── CENTRO ── -->
+    <!-- ── CENTRO — Timer ── -->
     <div class="center" id="centerArea">
       <div class="no-project-msg" id="noProjectMsg">
         ← Seleccioná un proyecto<br>para empezar tu pomodoro
       </div>
-
-      <div id="timerArea" style="display:none; width:100%; display:flex; flex-direction:column; align-items:center; gap:1.5rem;">
+      <div id="timerArea" style="display:none; width:100%; flex-direction:column; align-items:center; gap:1.5rem;">
         <div class="timer-wrap">
           <div class="active-project-badge" id="activeBadge">
             <div class="p-dot" id="activeDot"></div>
@@ -429,8 +93,10 @@
           </div>
           <div class="phase-label" id="phaseLabel">Listo para empezar</div>
           <div class="timer-display" id="timerDisplay">25:00</div>
-          <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-          <div class="cycle-wrap" id="cycleWrap">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width:0%"></div>
+          </div>
+          <div class="cycle-wrap">
             <div class="cycle-dot" id="d0"></div>
             <div class="cycle-dot" id="d1"></div>
             <div class="cycle-dot" id="d2"></div>
@@ -439,31 +105,38 @@
           </div>
           <div class="controls">
             <button class="btn" onclick="resetTimer()" title="Reiniciar">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M1 4v6h6M23 20v-6h-6"/>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+              </svg>
               Reiniciar
             </button>
             <button class="btn primary" id="mainBtn" onclick="toggleTimer()">
-              <svg id="mainBtnIcon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+              <svg id="mainBtnIcon" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5,3 19,12 5,21"/>
+              </svg>
               <span id="mainBtnLabel">Iniciar</span>
             </button>
             <button class="btn" onclick="skipPhase()" title="Saltar fase">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="5,4 15,12 5,20"/><line x1="19" y1="4" x2="19" y2="20"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polygon points="5,4 15,12 5,20"/>
+                <line x1="19" y1="4" x2="19" y2="20"/>
+              </svg>
               Saltar
             </button>
           </div>
         </div>
-
         <div class="task-input-wrap">
           <div class="task-label">¿En qué estás trabajando?</div>
-          <input class="task-input" id="taskInput" placeholder="Ej: revisar presupuesto Katuetei..." maxlength="60" />
+          <input class="task-input" id="taskInput"
+            placeholder="Ej: revisar presupuesto Katuetei..." maxlength="60" />
         </div>
       </div>
     </div>
 
-    <!-- ── SIDEBAR DERECHO ── -->
+    <!-- ── SIDEBAR DERECHO — Dashboard ── -->
     <div class="sidebar-right">
       <div class="sidebar-title">Hoy</div>
-
       <div class="metrics">
         <div class="metric">
           <div class="metric-label">Pomos</div>
@@ -480,7 +153,6 @@
           <div class="metric-value" style="font-size:14px; margin-top:4px" id="metTop">—</div>
         </div>
       </div>
-
       <div>
         <div class="sidebar-title" style="margin-bottom:.75rem">Esta semana</div>
         <div class="week-heatmap">
@@ -488,7 +160,6 @@
           <div class="week-bars" id="weekBars"></div>
         </div>
       </div>
-
       <div>
         <div class="history-header">
           <div class="sidebar-title">Historial</div>
@@ -496,7 +167,6 @@
         </div>
         <div class="history-list" id="historyList" style="margin-top:.75rem"></div>
       </div>
-
       <button class="export-btn" onclick="exportCSV()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -522,7 +192,9 @@
     </div>
     <div class="modal-sub">¿Dónde quedaste? Anotá una línea para retomar rápido la próxima vez.</div>
     <div>
-      <textarea id="closeNote" placeholder="Ej: revisar presupuesto Katuetei — faltan rubros de instalaciones..." maxlength="200"></textarea>
+      <textarea id="closeNote"
+        placeholder="Ej: revisar presupuesto Katuetei — faltan rubros de instalaciones..."
+        maxlength="200"></textarea>
       <div class="modal-chars"><span id="closeNoteChars">0</span>/200</div>
     </div>
     <div class="modal-actions">
@@ -532,421 +204,56 @@
   </div>
 </div>
 
-<!-- Notificación -->
+<!-- ══ MODAL CIERRE DE DÍA ══ -->
+<div class="modal-overlay" id="dayModalOverlay">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-icon">📅</div>
+      <div>
+        <div class="modal-title">Cierre del día</div>
+        <div class="modal-project" id="dayMetrics"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sidebar-title" style="margin-bottom:.5rem">Por proyecto</div>
+      <div id="dayBreakdown"></div>
+    </div>
+
+    <div>
+      <div class="sidebar-title" style="margin-bottom:.5rem">Notas de cierre</div>
+      <div class="day-notes-list" id="dayNotes"></div>
+    </div>
+
+    <div>
+      <div class="sidebar-title" style="margin-bottom:.4rem">
+        ¿Qué lograste hoy?
+        <span id="dayLogDate" style="font-weight:400; color:var(--text3)"></span>
+      </div>
+      <textarea id="dayLogTextarea"
+        placeholder="Ej: terminé el presupuesto de Katuetei y publiqué el post de LinkedIn..."
+        style="height:70px" maxlength="400"></textarea>
+    </div>
+
+    <button class="copy-btn" id="copyDayBtn" onclick="copyDaySummary()">
+      📋 Copiar resumen
+    </button>
+
+    <div class="modal-actions">
+      <button class="modal-save" onclick="closeDayModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
 <div class="notif" id="notif"></div>
 
-<script>
-// ── CONSTANTES ──
-const COLORS = ['#1D9E75','#378ADD','#D85A30','#7F77DD','#BA7517','#D4537E','#639922','#E24B4A'];
-const WORK_MIN = 25, SHORT_MIN = 5, LONG_MIN = 15, MAX_CYCLES = 4;
+<!-- ══ SCRIPTS (orden: data → timer → ui → modal → app) ══ -->
+<script src="js/data.js"></script>
+<script src="js/timer.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/modal.js"></script>
+<script src="js/app.js"></script>
 
-const ENERGY_CONFIG = {
-  high: {
-    label: '⚡ Energía alta',
-    color: '#1D9E75',
-    dotColor: '#1D9E75',
-    suggestions: ['Diseño BIM', 'Propuestas conceptuales', 'CimientoDigital', 'Contenido LinkedIn'],
-    tip: 'Modo creativo: ideal para diseño, propuestas y contenido'
-  },
-  mid: {
-    label: '🔋 Energía media',
-    color: '#378ADD',
-    dotColor: '#378ADD',
-    suggestions: ['Cómputos y costos', 'Documentación técnica', 'Presupuestos', 'ProspectaRed'],
-    tip: 'Modo técnico: ideal para cómputos, Revit y ejecución'
-  },
-  low: {
-    label: '🌙 Energía baja',
-    color: '#BA7517',
-    dotColor: '#BA7517',
-    suggestions: ['Responder mensajes', 'Actualizar CRM', 'Revisar facturas', 'Planificar mañana'],
-    tip: 'Modo gestión: ideal para emails, admin y organización'
-  }
-};
-
-// ── ESTADO ──
-let projects = JSON.parse(localStorage.getItem('ff_projects') || 'null');
-if (!projects) {
-  projects = [
-    { id: 1, name: 'Consultora Construcción', color: COLORS[0] },
-    { id: 2, name: 'CimientoDigital', color: COLORS[1] },
-    { id: 3, name: 'Katuetei Home', color: COLORS[2] },
-    { id: 4, name: 'ProspectaRed', color: COLORS[3] }
-  ];
-  saveProjects();
-}
-let sessions = JSON.parse(localStorage.getItem('ff_sessions') || '[]');
-let energyMode = null;
-let activeProject = null;
-let timer = null, running = false;
-let phase = 'work', cycleCount = 0;
-let timeLeft = WORK_MIN * 60, totalTime = WORK_MIN * 60;
-
-function saveProjects() { localStorage.setItem('ff_projects', JSON.stringify(projects)); }
-function saveSessions() { localStorage.setItem('ff_sessions', JSON.stringify(sessions)); }
-
-// ── ENERGY SCREEN ──
-function selectEnergy(card) {
-  document.querySelectorAll('.energy-card').forEach(c => c.classList.remove('selected'));
-  card.classList.add('selected');
-  energyMode = card.dataset.energy;
-  document.getElementById('energyContinue').classList.add('active');
-}
-
-function launchApp() {
-  if (!energyMode) return;
-  document.getElementById('energyScreen').classList.add('hidden');
-  document.getElementById('mainApp').classList.add('visible');
-  const cfg = ENERGY_CONFIG[energyMode];
-  document.getElementById('modeLabel').textContent = cfg.label;
-  document.getElementById('modeDot').style.background = cfg.dotColor;
-  // sugerencias
-  document.getElementById('suggestionsTitle').textContent = cfg.tip;
-  const tags = document.getElementById('suggestionsTags');
-  tags.innerHTML = cfg.suggestions.map(s =>
-    `<span class="suggestion-tag" onclick="addFromSuggestion('${s}')">${s}</span>`
-  ).join('');
-  renderProjects();
-  renderDashboard();
-  renderHistory();
-}
-
-function resetDay() {
-  clearTimeout(timer); running = false; activeProject = null;
-  document.getElementById('mainApp').classList.remove('visible');
-  document.getElementById('energyScreen').classList.remove('hidden');
-  document.querySelectorAll('.energy-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('energyContinue').classList.remove('active');
-  energyMode = null;
-}
-
-// ── PROYECTOS ──
-function addProject() {
-  const inp = document.getElementById('newProjectInput');
-  const name = inp.value.trim();
-  if (!name) return;
-  const color = COLORS[projects.length % COLORS.length];
-  projects.push({ id: Date.now(), name, color });
-  saveProjects();
-  inp.value = '';
-  renderProjects();
-}
-
-function addFromSuggestion(name) {
-  if (projects.find(p => p.name === name)) return;
-  const color = COLORS[projects.length % COLORS.length];
-  projects.push({ id: Date.now(), name, color });
-  saveProjects();
-  renderProjects();
-}
-
-function deleteProject(id) {
-  projects = projects.filter(p => p.id !== id);
-  if (activeProject && activeProject.id === id) { activeProject = null; resetTimer(); updateTimerArea(); }
-  saveProjects();
-  renderProjects();
-}
-
-function selectProject(id) {
-  const p = projects.find(pr => pr.id === id);
-  if (!p) return;
-  activeProject = p;
-  resetTimer();
-  renderProjects();
-  updateTimerArea();
-}
-
-function renderProjects() {
-  const list = document.getElementById('projectList');
-  if (!projects.length) { list.innerHTML = '<div class="empty-msg">Agrega un proyecto para empezar</div>'; return; }
-  list.innerHTML = projects.map(p => {
-    const cnt = sessions.filter(s => s.projectId === p.id && isToday(s.ts) && s.type === 'work').length;
-    return `<div class="project-item${activeProject && activeProject.id === p.id ? ' active' : ''}" onclick="selectProject(${p.id})">
-      <div class="p-dot" style="background:${p.color}"></div>
-      <div class="p-name">${p.name}</div>
-      ${cnt ? `<div class="p-count">${cnt}</div>` : ''}
-      <button class="p-delete" onclick="event.stopPropagation();deleteProject(${p.id})" title="Eliminar">×</button>
-    </div>`;
-  }).join('');
-}
-
-function updateTimerArea() {
-  const noMsg = document.getElementById('noProjectMsg');
-  const timerArea = document.getElementById('timerArea');
-  if (!activeProject) {
-    noMsg.style.display = 'block';
-    timerArea.style.display = 'none';
-    return;
-  }
-  noMsg.style.display = 'none';
-  timerArea.style.display = 'flex';
-  document.getElementById('activeName').textContent = activeProject.name;
-  document.getElementById('activeDot').style.background = activeProject.color;
-}
-
-// ── TIMER ──
-function fmt(s) { return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; }
-
-function updateDisplay() {
-  document.getElementById('timerDisplay').textContent = fmt(timeLeft);
-  const pct = Math.round(((totalTime - timeLeft) / totalTime) * 100);
-  document.getElementById('progressFill').style.width = pct + '%';
-  const labels = { work: 'Tiempo de trabajo', short: 'Descanso corto', long: 'Descanso largo' };
-  document.getElementById('phaseLabel').textContent = labels[phase];
-  document.getElementById('cycleLabel').textContent = `${cycleCount} / ${MAX_CYCLES}`;
-  for (let i = 0; i < MAX_CYCLES; i++) {
-    const d = document.getElementById('d' + i);
-    if (d) d.className = 'cycle-dot' + (i < cycleCount ? ' done' : '');
-  }
-}
-
-function toggleTimer() {
-  if (!activeProject) { showNotif('Seleccioná un proyecto primero'); return; }
-  running = !running;
-  const btn = document.getElementById('mainBtn');
-  const icon = document.getElementById('mainBtnIcon');
-  const lbl = document.getElementById('mainBtnLabel');
-  if (running) {
-    icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
-    lbl.textContent = 'Pausar';
-    tick();
-  } else {
-    icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
-    lbl.textContent = 'Continuar';
-    clearTimeout(timer);
-  }
-}
-
-function tick() {
-  if (!running) return;
-  if (timeLeft <= 0) { completePhase(); return; }
-  timeLeft--;
-  updateDisplay();
-  timer = setTimeout(tick, 1000);
-}
-
-// pendingSession guarda los datos hasta que el modal confirma
-let pendingSession = null;
-
-function completePhase() {
-  clearTimeout(timer); running = false;
-  const task = document.getElementById('taskInput').value.trim();
-  const isWork = phase === 'work';
-
-  pendingSession = { projectId: activeProject.id, type: phase, ts: Date.now(), task, note: '' };
-
-  if (isWork) {
-    // abrir modal de cierre antes de pasar al descanso
-    openCloseModal();
-  } else {
-    // descanso terminado: registrar directo sin modal
-    commitPhase(false);
-  }
-
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.frequency.setValueAtTime(isWork ? 880 : 660, ctx.currentTime);
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
-    osc.start(); osc.stop(ctx.currentTime + 0.6);
-  } catch(e) {}
-
-  if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification('FocusFlow', { body: isWork ? '🍅 Pomodoro completado!' : '☕ A trabajar!' });
-  }
-}
-
-function commitPhase(isWork) {
-  if (pendingSession) {
-    sessions.push(pendingSession);
-    saveSessions();
-    pendingSession = null;
-  }
-  if (isWork) {
-    cycleCount++;
-    if (cycleCount >= MAX_CYCLES) { phase = 'long'; totalTime = timeLeft = LONG_MIN * 60; cycleCount = 0; }
-    else { phase = 'short'; totalTime = timeLeft = SHORT_MIN * 60; }
-  } else {
-    phase = 'work'; totalTime = timeLeft = WORK_MIN * 60;
-    showNotif('☕ Descanso terminado. ¡A trabajar!');
-  }
-  const icon = document.getElementById('mainBtnIcon');
-  const lbl = document.getElementById('mainBtnLabel');
-  icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
-  lbl.textContent = 'Iniciar';
-  updateDisplay();
-  renderDashboard();
-  renderHistory();
-  renderProjects();
-}
-
-// ── MODAL CIERRE ──
-function openCloseModal() {
-  const p = projects.find(pr => pr.id === pendingSession.projectId);
-  document.getElementById('modalProject').innerHTML =
-    `<div class="p-dot" style="background:${p ? p.color : '#666'}"></div>${p ? p.name : ''}`;
-  document.getElementById('closeNote').value = '';
-  document.getElementById('closeNoteChars').textContent = '0';
-  document.getElementById('modalOverlay').classList.add('show');
-  setTimeout(() => document.getElementById('closeNote').focus(), 100);
-}
-
-function dismissModal(save) {
-  if (save) {
-    const note = document.getElementById('closeNote').value.trim();
-    if (pendingSession) pendingSession.note = note;
-  }
-  document.getElementById('modalOverlay').classList.remove('show');
-  commitPhase(true);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('closeNote').addEventListener('input', function() {
-    document.getElementById('closeNoteChars').textContent = this.value.length;
-  });
-  // cerrar con Enter+Ctrl o Escape
-  document.getElementById('closeNote').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) dismissModal(true);
-    if (e.key === 'Escape') dismissModal(false);
-  });
-});
-
-// ── EXPORTAR CSV ──
-function exportCSV() {
-  if (!sessions.length) { showNotif('Sin sesiones para exportar'); return; }
-  const header = ['Fecha','Hora','Proyecto','Tipo','Tarea','Nota','Minutos'];
-  const rows = sessions.map(s => {
-    const p = projects.find(pr => pr.id === s.projectId);
-    const d = new Date(s.ts);
-    const fecha = d.toLocaleDateString('es-PY');
-    const hora  = d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
-    const proyecto = p ? p.name : 'Eliminado';
-    const tipo = s.type === 'work' ? 'Trabajo' : s.type === 'short' ? 'Descanso corto' : 'Descanso largo';
-    const tarea = (s.task || '').replace(/"/g, '""');
-    const nota  = (s.note || '').replace(/"/g, '""');
-    const mins  = s.type === 'work' ? WORK_MIN : s.type === 'short' ? SHORT_MIN : LONG_MIN;
-    return [fecha, hora, `"${proyecto}"`, tipo, `"${tarea}"`, `"${nota}"`, mins];
-  });
-  const csv = [header, ...rows].map(r => r.join(',')).join('\n');
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const today = new Date().toISOString().slice(0,10);
-  a.href = url; a.download = `focusflow-${today}.csv`;
-  a.click(); URL.revokeObjectURL(url);
-  showNotif(`CSV exportado — ${sessions.length} sesiones`);
-}
-
-function resetTimer() {
-  clearTimeout(timer); running = false; phase = 'work';
-  timeLeft = totalTime = WORK_MIN * 60; cycleCount = 0;
-  updateDisplay();
-  const icon = document.getElementById('mainBtnIcon');
-  const lbl = document.getElementById('mainBtnLabel');
-  icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
-  lbl.textContent = 'Iniciar';
-}
-
-function skipPhase() { clearTimeout(timer); running = false; completePhase(); }
-
-// ── DASHBOARD ──
-function isToday(ts) {
-  const d = new Date(ts), n = new Date();
-  return d.toDateString() === n.toDateString();
-}
-
-function startOfWeek() {
-  const n = new Date(); n.setHours(0,0,0,0);
-  n.setDate(n.getDate() - n.getDay()); return n;
-}
-
-function renderDashboard() {
-  const todayWork = sessions.filter(s => s.type === 'work' && isToday(s.ts));
-  const mins = todayWork.length * WORK_MIN;
-  document.getElementById('metPomos').textContent = todayWork.length;
-  document.getElementById('metFoco').textContent = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
-
-  // top project today
-  const counts = {};
-  todayWork.forEach(s => { counts[s.projectId] = (counts[s.projectId] || 0) + 1; });
-  const topId = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
-  const topP = topId ? projects.find(p => p.id == topId) : null;
-  document.getElementById('metTop').textContent = topP ? `${topP.name} (${counts[topId]} 🍅)` : '—';
-
-  // heatmap semanal
-  const sw = startOfWeek();
-  const days = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  const todayIdx = new Date().getDay();
-  let daysHTML = '', barsHTML = '';
-  let weekCounts = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(sw); d.setDate(sw.getDate() + i);
-    const cnt = sessions.filter(s => {
-      const sd = new Date(s.ts);
-      return s.type === 'work' && sd.toDateString() === d.toDateString();
-    }).length;
-    weekCounts.push(cnt);
-    daysHTML += `<div class="week-day">${days[i]}</div>`;
-  }
-  const maxCnt = Math.max(...weekCounts, 1);
-  for (let i = 0; i < 7; i++) {
-    const pct = Math.round((weekCounts[i] / maxCnt) * 100);
-    const cls = i === todayIdx ? 'today' : weekCounts[i] > 0 ? 'has-data' : '';
-    barsHTML += `<div class="week-bar-wrap"><div class="week-bar ${cls}" style="height:${Math.max(pct, 4)}%"></div></div>`;
-  }
-  document.getElementById('weekDays').innerHTML = daysHTML;
-  document.getElementById('weekBars').innerHTML = barsHTML;
-}
-
-function renderHistory() {
-  const list = document.getElementById('historyList');
-  const recent = [...sessions].reverse().slice(0, 10);
-  if (!recent.length) { list.innerHTML = '<div class="empty-msg">Sin sesiones aún.<br>¡Arrancá tu primer pomodoro!</div>'; return; }
-  list.innerHTML = recent.map(s => {
-    const p = projects.find(pr => pr.id === s.projectId);
-    const color = p ? p.color : '#666';
-    const name = p ? p.name : 'Proyecto eliminado';
-    const t = new Date(s.ts).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
-    const typeLabel = s.type === 'work' ? '🍅' : '☕';
-    return `<div class="history-item">
-      <div class="h-dot" style="background:${color}"></div>
-      <div class="h-project" title="${s.task || name}">${s.task || name}</div>
-      <div class="h-type">${typeLabel}</div>
-      <div class="h-time">${t}</div>
-    </div>`;
-  }).join('');
-}
-
-function clearHistory() {
-  if (!confirm('¿Borrar todo el historial de sesiones?')) return;
-  sessions = []; saveSessions();
-  renderDashboard(); renderHistory(); renderProjects();
-}
-
-function showNotif(msg) {
-  const n = document.getElementById('notif');
-  n.textContent = msg;
-  n.classList.add('show');
-  setTimeout(() => n.classList.remove('show'), 3500);
-}
-
-// ── INIT ──
-document.getElementById('newProjectInput').addEventListener('keydown', e => { if (e.key === 'Enter') addProject(); });
-if ('Notification' in window) Notification.requestPermission();
-updateDisplay();
-</script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/pomodoro/sw.js')
-      .then(() => console.log('FocusFlow SW registrado'))
-      .catch(e => console.warn('SW error:', e));
-  });
-}
-</script>
 </body>
 </html>
