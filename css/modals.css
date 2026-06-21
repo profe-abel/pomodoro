@@ -86,3 +86,40 @@
 }
 .copy-btn:hover { background: var(--border); color: var(--text); }
 .copy-btn.success { border-color: var(--green); color: var(--green); }
+
+/* ── FLOW BANNER ── */
+.flow-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+  background: #1a1a0e; border-bottom: 0.5px solid #BA7517;
+  padding: .75rem 1.5rem;
+  display: flex; align-items: center; gap: 12px;
+  transform: translateY(-100%); transition: transform .3s ease;
+}
+.flow-banner.show { transform: translateY(0); }
+.flow-banner-text {
+  flex: 1; font-size: 14px; color: var(--text2);
+}
+.flow-banner-text strong { color: #e8c97e; }
+.flow-countdown {
+  font-size: 13px; color: var(--text3);
+  background: var(--bg3); border-radius: var(--radius-sm);
+  padding: 2px 8px; font-variant-numeric: tabular-nums;
+  min-width: 28px; text-align: center;
+}
+.flow-btn {
+  padding: 6px 14px; font-size: 13px; font-weight: 500;
+  border-radius: var(--radius-sm); cursor: pointer; border: none;
+}
+.flow-btn.extend {
+  background: #BA7517; color: #fff;
+}
+.flow-btn.extend:hover { background: #9a6010; }
+.flow-btn.close-flow {
+  background: transparent; color: var(--text3);
+  border: 0.5px solid var(--border2);
+}
+.flow-btn.close-flow:hover { color: var(--text2); }
+.flow-ext-indicator {
+  font-size: 11px; color: #BA7517; font-weight: 500;
+  margin-left: 6px;
+}

@@ -102,6 +102,7 @@
             <div class="cycle-dot" id="d2"></div>
             <div class="cycle-dot" id="d3"></div>
             <span class="cycle-label" id="cycleLabel">0 / 4</span>
+            <span class="flow-ext-indicator" id="flowExtIndicator"></span>
           </div>
           <div class="controls">
             <button class="btn" onclick="resetTimer()" title="Reiniciar">
@@ -136,7 +137,11 @@
 
     <!-- ── SIDEBAR DERECHO — Dashboard ── -->
     <div class="sidebar-right">
-      <div class="sidebar-title">Hoy</div>
+      <button class="panel-toggle" id="patternToggle" onclick="togglePatterns()">Patrones →</button>
+
+      <!-- Panel Dashboard -->
+      <div id="dashPanel">
+        <div class="sidebar-title">Hoy</div>
       <div class="metrics">
         <div class="metric">
           <div class="metric-label">Pomos</div>
@@ -175,9 +180,24 @@
         </svg>
         Exportar historial CSV
       </button>
+      </div><!-- /dashPanel -->
+
+      <!-- Panel Patrones -->
+      <div id="patternsPanel" class="hidden" style="display:flex;flex-direction:column;gap:.75rem"></div>
+
     </div>
 
   </div>
+</div>
+
+<!-- ══ FLOW BANNER ══ -->
+<div class="flow-banner" id="flowBanner">
+  <div class="flow-banner-text">
+    ⚡ <strong>¿Seguís en flow?</strong> Podés extender el pomodoro sin perder el registro.
+  </div>
+  <div class="flow-countdown" id="flowCountdown">10</div>
+  <button class="flow-btn extend" onclick="extendFlow()">+10 min</button>
+  <button class="flow-btn close-flow" onclick="closeFlow()">Cerrar pomodoro</button>
 </div>
 
 <!-- ══ MODAL CIERRE DE POMODORO ══ -->
@@ -248,11 +268,12 @@
 <!-- Toast -->
 <div class="notif" id="notif"></div>
 
-<!-- ══ SCRIPTS (orden: data → timer → ui → modal → app) ══ -->
+<!-- ══ SCRIPTS (orden: data → timer → ui → modal → patterns → app) ══ -->
 <script src="js/data.js"></script>
 <script src="js/timer.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/modal.js"></script>
+<script src="js/patterns.js"></script>
 <script src="js/app.js"></script>
 
 </body>
