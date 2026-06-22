@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FocusFlow | Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Inter:wght@400;500&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "inverse-surface": "#e5e2e1",
+                "surface-container-highest": "#353534",
+                "surface-tint": "#4edea3",
+                "on-tertiary-fixed-variant": "#842225",
+                "on-error-container": "#ffdad6",
+                "on-primary-fixed": "#002113",
+                "on-background": "#e5e2e1",
+                "secondary-container": "#0b513d",
+                "secondary": "#95d3ba",
+                "surface-container-high": "#2a2a2a",
+                "on-surface": "#e5e2e1",
+                "secondary-fixed": "#b0f0d6",
+                "on-secondary-container": "#83c2a9",
+                "background": "#131313",
+                "primary": "#4edea3",
+                "on-secondary-fixed-variant": "#0b513d",
+                "on-tertiary-container": "#711419",
+                "outline": "#86948a",
+                "tertiary": "#ffb3af",
+                "surface-dim": "#131313",
+                "on-tertiary": "#650911",
+                "tertiary-container": "#fc7c78",
+                "on-surface-variant": "#bbcabf",
+                "primary-container": "#10b981",
+                "outline-variant": "#3c4a42",
+                "on-primary": "#003824",
+                "primary-fixed-dim": "#4edea3",
+                "tertiary-fixed-dim": "#ffb3af",
+                "error": "#ffb4ab",
+                "primary-fixed": "#6ffbbe",
+                "secondary-fixed-dim": "#95d3ba",
+                "surface-container": "#201f1f",
+                "on-primary-fixed-variant": "#005236",
+                "inverse-on-surface": "#313030",
+                "surface-bright": "#3a3939",
+                "surface-container-lowest": "#0e0e0e",
+                "error-container": "#93000a",
+                "surface-container-low": "#1c1b1b",
+                "inverse-primary": "#006c49",
+                "on-primary-container": "#00422b",
+                "tertiary-fixed": "#ffdad7",
+                "surface-variant": "#353534",
+                "on-tertiary-fixed": "#410005",
+                "on-secondary": "#003829",
+                "on-error": "#690005",
+                "on-secondary-fixed": "#002117",
+                "surface": "#131313"
+              },
+              "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+              },
+              "spacing": {
+                "stack-md": "16px",
+                "unit": "4px",
+                "stack-lg": "32px",
+                "margin-mobile": "20px",
+                "stack-sm": "8px",
+                "container-max": "1200px",
+                "margin-desktop": "64px",
+                "gutter": "24px",
+                "container-padding": "40px"
+              },
+              "fontFamily": {
+                "body-lg": ["Inter"],
+                "headline-lg-mobile": ["Manrope"],
+                "display": ["Manrope"],
+                "label-sm": ["JetBrains Mono"],
+                "body-md": ["Inter"],
+                "headline-md": ["Manrope"],
+                "body-sm": ["Inter"],
+                "label-md": ["JetBrains Mono"],
+                "headline-lg": ["Manrope"],
+                "timer-display": ["Manrope"]
+              },
+              "fontSize": {
+                "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                "display": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                "timer-display": ["120px", {"lineHeight": "120px", "letterSpacing": "-0.04em", "fontWeight": "700"}]
+              },
+              "animation": {
+                "soft-pulse": "soft-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                "glow": "glow 2s ease-in-out infinite alternate"
+              },
+              "keyframes": {
+                "soft-pulse": {
+                  "0%, 100%": { "opacity": "1", "transform": "scale(1)" },
+                  "50%": { "opacity": "0.9", "transform": "scale(1.02)" }
+                },
+                "glow": {
+                  "from": { "box-shadow": "0 0 5px rgba(78, 222, 163, 0.2), 0 0 10px rgba(78, 222, 163, 0.1)" },
+                  "to": { "box-shadow": "0 0 15px rgba(78, 222, 163, 0.5), 0 0 25px rgba(78, 222, 163, 0.3)" }
+                }
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .energy-card-active {
+            border: 2px solid #4edea3 !important;
+            background-color: #1c1b1b !important;
+            box-shadow: 0 4px 12px rgba(78, 222, 163, 0.12);
+        }
+        .timer-glow {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        body {
+            background-color: #131313;
+            color: #e5e2e1;
+            -webkit-font-smoothing: antialiased;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #3c4a42;
+            border-radius: 10px;
+        }
+        .btn-hover-effect {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-hover-effect:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+        }
+        .btn-hover-effect:active {
+            transform: scale(0.95);
+        }
+        .timer-active-pulse {
+            animation: soft-pulse 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md overflow-x-hidden">
+<!-- Top Navigation Shell -->
+<header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md flex justify-between items-center px-container-padding py-stack-md max-w-[1200px] left-1/2 -translate-x-1/2">
+<div class="font-headline-md text-headline-md font-bold text-primary">FocusFlow</div>
+<div class="flex items-center gap-gutter">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">dark_mode</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">settings</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">account_circle</button>
+</div>
+</header>
+<main class="mt-[80px] max-w-[1200px] mx-auto px-container-padding pb-stack-lg">
+<!-- Welcome & Strategy Selection -->
+<section class="mb-stack-lg">
+<h1 class="font-headline-lg text-headline-lg mb-unit text-on-surface">¿Cómo está tu energía ahora mismo?</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-stack-md max-w-2xl">Según tu nivel actual, te sugiero en qué proyectos y modo trabajar hoy.</p>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Alta Energy -->
+<button class="energy-card flex flex-col items-center justify-center p-stack-md rounded-xl bg-surface-container-low border border-outline-variant hover:bg-surface-container-high transition-all group" id="energy-alta" onclick="selectEnergy('alta')">
+<span class="material-symbols-outlined text-[48px] mb-unit text-primary group-hover:scale-110 transition-transform" data-icon="bolt">bolt</span>
+<span class="font-headline-md text-headline-md">Alta</span>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-2 text-center px-4">Fresco, listo para pensar con profundidad</p>
+</button>
+<!-- Media Energy -->
+<button class="energy-card flex flex-col items-center justify-center p-stack-md rounded-xl bg-surface-container-low border border-outline-variant hover:bg-surface-container-high transition-all group" id="energy-media" onclick="selectEnergy('media')">
+<span class="material-symbols-outlined text-[48px] mb-unit text-primary group-hover:scale-110 transition-transform" data-icon="battery_full">battery_full</span>
+<span class="font-headline-md text-headline-md">Media</span>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-2 text-center px-4">Operativo, puedo ejecutar tareas concretas</p>
+</button>
+<!-- Baja Energy -->
+<button class="energy-card flex flex-col items-center justify-center p-stack-md rounded-xl bg-surface-container-low border border-outline-variant hover:bg-surface-container-high transition-all group" id="energy-baja" onclick="selectEnergy('baja')">
+<span class="material-symbols-outlined text-[48px] mb-unit text-secondary group-hover:scale-110 transition-transform" data-icon="bedtime">bedtime</span>
+<span class="font-headline-md text-headline-md">Baja</span>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-2 text-center px-4">Cansado, mejor cosas livianas o gestión</p>
+</button>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-stack-lg items-start">
+<!-- Left Side: Focus Core -->
+<div class="lg:col-span-7 flex flex-col gap-stack-md">
+<!-- Timer Card -->
+<div class="bg-surface-container-lowest rounded-[32px] p-stack-lg flex flex-col items-center timer-glow relative overflow-hidden group border border-outline-variant">
+<!-- STITCH_SHADER_START:ANIMATION_9 class="absolute inset-0 w-full h-full -z-10" -->
+<div class="absolute inset-0 w-full h-full -z-10" style="display:block;">
+<canvas id="shader-canvas-ANIMATION_9" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_9');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+varying vec2 v_texCoord;
+
+void main() {
+    vec2 uv = v_texCoord;
+    
+    // Suave gradiente radial que pulsa con el tiempo
+    float dist = distance(uv, vec2(0.5));
+    float pulse = 0.5 + 0.5 * sin(u_time * 0.5);
+    
+    // Colores basados en el sistema de diseño (Verde esmeralda/bosque)
+    vec3 color1 = vec3(0.06, 0.72, 0.51); // #10b981
+    vec3 color2 = vec3(0.04, 0.04, 0.04); // Fondo oscuro
+    
+    vec3 finalColor = mix(color1 * 0.1, color2, dist * (1.2 + pulse * 0.1));
+    
+    // Añadir un poco de ruido/grano sutil
+    float noise = fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
+    finalColor += noise * 0.02;
+
+    gl_FragColor = vec4(finalColor, 1.0);
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- STITCH_SHADER_END:ANIMATION_9 -->
+<div class="absolute top-0 left-0 w-full h-1 bg-surface-container/30">
+<div class="h-full bg-primary transition-all duration-1000" id="progress-bar" style="width: 0%"></div>
+</div>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mb-unit relative z-10">Listo para empezar</span>
+<div class="relative py-unit z-10">
+<div class="font-timer-display text-timer-display text-on-surface transition-transform duration-500" id="timer-display">25:00</div>
+</div>
+<div class="flex items-center gap-gutter mt-stack-md relative z-10">
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md btn-hover-effect" onclick="resetTimer()">
+<span class="material-symbols-outlined" data-icon="restart_alt">restart_alt</span>
+                        Reiniciar
+                    </button>
+<button class="bg-primary text-on-primary px-stack-lg py-4 rounded-full font-headline-md text-headline-md btn-hover-effect shadow-lg" id="main-btn" onclick="toggleTimer()">
+                        Iniciar
+                    </button>
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md btn-hover-effect" onclick="skipTimer()">
+                        Saltar
+                        <span class="material-symbols-outlined" data-icon="skip_next">skip_next</span>
+</button>
+</div>
+<div class="mt-stack-md flex items-center gap-2 bg-surface-container-high/60 backdrop-blur-sm px-stack-md py-1 rounded-full relative z-10">
+<span class="font-label-md text-label-md text-primary">0 / 4</span>
+<div class="flex gap-1">
+<div class="w-1.5 h-1.5 rounded-full bg-primary"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-outline-variant"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-outline-variant"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-outline-variant"></div>
+</div>
+</div>
+</div>
+<!-- Stats Summary -->
+<div class="grid grid-cols-2 gap-gutter">
+<div class="bg-surface-container-lowest p-gutter rounded-xl border border-outline-variant">
+<div class="flex items-center justify-between mb-unit">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">Pomos completados</span>
+<span class="material-symbols-outlined text-primary" data-icon="check_circle">check_circle</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-on-surface">0</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Hoy</p>
+</div>
+<div class="bg-surface-container-lowest p-gutter rounded-xl border border-outline-variant">
+<div class="flex items-center justify-between mb-unit">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase">Foco trabajado</span>
+<span class="material-symbols-outlined text-primary" data-icon="schedule">schedule</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-on-surface">0m</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Hoy</p>
+</div>
+</div>
+<!-- Energy Tip Banner -->
+<div class="bg-primary-container/10 p-gutter rounded-xl border border-primary/20 flex items-start gap-gutter">
+<span class="material-symbols-outlined text-primary" data-icon="bolt">bolt</span>
+<p class="font-body-md text-body-md text-on-surface">
+<strong>¿Seguís en flow?</strong> Podés extender el pomodoro sin perder el registro.
+                </p>
+</div>
+</div>
+<!-- Right Side: Projects & Context -->
+<div class="lg:col-span-5 flex flex-col gap-stack-md">
+<!-- Project Selector -->
+<div class="bg-surface-container-lowest rounded-3xl p-stack-md border border-outline-variant">
+<div class="flex items-center justify-between mb-stack-md px-unit">
+<h2 class="font-headline-md text-headline-md text-on-surface">Proyectos</h2>
+<button class="material-symbols-outlined p-2 bg-surface-container-high text-primary rounded-full hover:bg-primary hover:text-on-primary transition-colors btn-hover-effect" data-icon="add">add</button>
+</div>
+<div class="flex flex-col gap-1 custom-scrollbar max-h-[320px] overflow-y-auto px-unit">
+<button class="flex items-center justify-between p-unit rounded-lg bg-surface-container-low border-l-4 border-primary transition-all text-left">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Diseño FocusFlow UI</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Deep Work • 2h restantes</span>
+</div>
+<span class="material-symbols-outlined text-primary" data-icon="radio_button_checked">radio_button_checked</span>
+</button>
+<button class="flex items-center justify-between p-unit rounded-lg hover:bg-surface-container-low transition-all text-left border-l-4 border-transparent opacity-60">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Gestión de Emails</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Tareas Livianas</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="radio_button_unchecked">radio_button_unchecked</span>
+</button>
+<button class="flex items-center justify-between p-unit rounded-lg hover:bg-surface-container-low transition-all text-left border-l-4 border-transparent opacity-60">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Planificación Semanal</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Estrategia</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="radio_button_unchecked">radio_button_unchecked</span>
+</button>
+<div class="mt-gutter p-gutter rounded-xl bg-surface-container-low border border-dashed border-outline-variant flex flex-col items-center justify-center text-center">
+<span class="material-symbols-outlined text-primary mb-2" data-icon="lightbulb">lightbulb</span>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Sugeridos para ahora: <br/><strong class="text-on-surface">Gestión de Emails</strong> (Nivel de energía bajo)</p>
+</div>
+</div>
+</div>
+<!-- Patterns & Analytics Entry -->
+<div class="flex flex-col gap-unit">
+<button class="w-full flex items-center justify-between p-gutter bg-surface-container-lowest rounded-xl border border-outline-variant hover:bg-surface-container-low transition-all group btn-hover-effect">
+<div class="flex items-center gap-unit">
+<span class="material-symbols-outlined text-primary" data-icon="analytics">analytics</span>
+<span class="font-label-md text-label-md text-on-surface">Patrones de enfoque</span>
+</div>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-gutter bg-surface-container-lowest rounded-xl border border-outline-variant hover:bg-surface-container-low transition-all group btn-hover-effect">
+<div class="flex items-center gap-unit">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="history">history</span>
+<span class="font-label-md text-label-md text-on-surface">Historial de sesiones</span>
+</div>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Mobile only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 flex justify-around items-center px-gutter py-4 bg-surface-container-lowest border-t border-outline-variant">
+<button class="flex flex-col items-center justify-center text-primary rounded-full px-6 py-1">
+<span class="material-symbols-outlined" data-icon="timer">timer</span>
+<span class="font-label-sm text-label-sm">Focus</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-6 py-1">
+<span class="material-symbols-outlined" data-icon="bolt">bolt</span>
+<span class="font-label-sm text-label-sm">Energy</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-6 py-1">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label-sm text-label-sm">History</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-6 py-1">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-label-sm text-label-sm">Summary</span>
+</button>
+</nav>
+<script>
+    let timeLeft = 1500; // 25:00
+    let timerId = null;
+    let isRunning = false;
+
+    const display = document.getElementById('timer-display');
+    const progressBar = document.getElementById('progress-bar');
+    const mainBtn = document.getElementById('main-btn');
+
+    function updateDisplay() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        display.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        const percentage = ((1500 - timeLeft) / 1500) * 100;
+        progressBar.style.width = `${percentage}%`;
+    }
+
+    function toggleTimer() {
+        if (isRunning) {
+            clearInterval(timerId);
+            mainBtn.textContent = 'Iniciar';
+            mainBtn.style.backgroundColor = '#4edea3'; // Primary
+            mainBtn.style.color = '#003824'; // On Primary
+            display.classList.remove('timer-active-pulse');
+        } else {
+            timerId = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateDisplay();
+                } else {
+                    clearInterval(timerId);
+                    alert('¡Pomodoro completado!');
+                    resetTimer();
+                }
+            }, 1000);
+            mainBtn.textContent = 'Pausar';
+            mainBtn.style.backgroundColor = '#ffb4ab'; // Error/Warning
+            mainBtn.style.color = '#690005'; // On Error
+            display.classList.add('timer-active-pulse');
+        }
+        isRunning = !isRunning;
+    }
+
+    function resetTimer() {
+        clearInterval(timerId);
+        timeLeft = 1500;
+        isRunning = false;
+        mainBtn.textContent = 'Iniciar';
+        mainBtn.style.backgroundColor = '#4edea3';
+        mainBtn.style.color = '#003824';
+        display.classList.remove('timer-active-pulse');
+        updateDisplay();
+    }
+
+    function skipTimer() {
+        if(confirm('¿Saltar esta sesión?')) {
+            resetTimer();
+        }
+    }
+
+    function selectEnergy(type) {
+        const cards = document.querySelectorAll('.energy-card');
+        cards.forEach(card => card.classList.remove('energy-card-active'));
+        document.getElementById(`energy-${type}`).classList.add('energy-card-active');
+    }
+
+    // Initialize display
+    updateDisplay();
+    selectEnergy('media'); // Default state
+</script>
+</body></html>
