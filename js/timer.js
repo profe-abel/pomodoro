@@ -25,7 +25,10 @@ function currentWorkSecs() {
 function updateDisplay() {
   document.getElementById('timerDisplay').textContent = fmt(timeLeft);
   const pct = Math.round(((totalTime - timeLeft) / totalTime) * 100);
-  document.getElementById('progressFill').style.width = pct + '%';
+  const fill = document.getElementById('progressFill');
+  const topFill = document.getElementById('timerTopProgressFill');
+  if (fill) fill.style.width = pct + '%';
+  if (topFill) topFill.style.width = pct + '%';
   const labels = { work: 'Tiempo de trabajo', short: 'Descanso corto', long: 'Descanso largo' };
   document.getElementById('phaseLabel').textContent = labels[phase];
   document.getElementById('cycleLabel').textContent = `${cycleCount} / ${MAX_CYCLES}`;
@@ -44,13 +47,18 @@ function toggleTimer() {
   running = !running;
   const icon = document.getElementById('mainBtnIcon');
   const lbl  = document.getElementById('mainBtnLabel');
+  const btn  = document.getElementById('mainBtn');
   if (running) {
     icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
     lbl.textContent = 'Pausar';
+    btn.classList.remove('state-idle');
+    btn.classList.add('state-running');
     tick();
   } else {
     icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
     lbl.textContent = 'Continuar';
+    btn.classList.remove('state-running');
+    btn.classList.add('state-paused');
     clearTimeout(timer);
   }
 }
@@ -66,8 +74,11 @@ function resetTimer() {
   updateDisplay();
   const icon = document.getElementById('mainBtnIcon');
   const lbl  = document.getElementById('mainBtnLabel');
+  const btn  = document.getElementById('mainBtn');
   if (icon) icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
   if (lbl)  lbl.textContent = 'Iniciar';
+  btn.classList.remove('state-running', 'state-paused');
+  btn.classList.add('state-idle');
 }
 
 function skipPhase() {
@@ -138,8 +149,11 @@ function commitPhase(isWork) {
   }
   const icon = document.getElementById('mainBtnIcon');
   const lbl  = document.getElementById('mainBtnLabel');
+  const btn  = document.getElementById('mainBtn');
   if (icon) icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
   if (lbl)  lbl.textContent = 'Iniciar';
+  btn.classList.remove('state-running', 'state-paused');
+  btn.classList.add('state-idle');
   updateDisplay();
   renderDashboard();
   renderHistory();
